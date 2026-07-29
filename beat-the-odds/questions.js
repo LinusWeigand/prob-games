@@ -270,7 +270,7 @@ const QUESTIONS = [
     text: "You flip 8 Coins. What is the probability you get three of the same in a row at any point?",
     options: ["0.25", "0.4", "0.55", "0.75", "0.9"],
     answer: 3,
-    note: "188 of the 256 sequences contain HHH or TTT: 0.7344"
+    note: "188 of the 256 number-logic contain HHH or TTT: 0.7344"
   },
 
   {

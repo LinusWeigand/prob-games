@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orderbook Game — Arbitrage Trainer</title>
+<style>
+:root{
+  --bg:#d8d5d0; --card:#faf7f1; --art:#eee8dc; --quote:#cfe1e9; --quote-h:#bfd7e2;
+  --ink:#333; --muted:#6b6b66; --accent:#8fb0bf; --good:#3f9d4f; --bad:#c0563b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+#app{max-width:1180px;margin:0 auto;padding:22px 30px 40px}
+
+.progress{font-size:15px;color:#55524d}
+.hr{border-bottom:1px solid #bcb9b2;margin:10px 0 6px}
+.timerRow{text-align:right;color:#55524d;font-size:15px;min-height:22px}
+.timerRow b{font-variant-numeric:tabular-nums;font-weight:600}
+.timerRow b.timeLow{color:var(--bad);font-weight:700}
+
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:14px}
+.cell{min-height:216px}
+.cell.empty{background:rgba(255,255,255,.28);border-radius:16px}
+.card{position:relative;background:var(--card);border-radius:16px;padding:10px;box-shadow:0 2px 8px rgba(60,55,45,.10),0 0 0 1px rgba(60,55,45,.04)}
+.badge{position:absolute;top:-9px;right:-9px;width:28px;height:28px;border-radius:50%;background:#4c4a46;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.badge.pos{background:var(--good)} .badge.neg{background:var(--bad)}
+.art{background:var(--art);border-radius:12px;height:140px;display:flex;align-items:center;justify-content:center;gap:6px}
+.quotes{display:flex;gap:8px;margin-top:10px}
+.quote{flex:1;border:0;background:var(--quote);border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;
+  user-select:none;-webkit-user-select:none;font:inherit}
+.quote:hover{background:var(--quote-h)}
+.quote:active{transform:translateY(1px)}
+.quote .lbl{display:block;font-size:12.5px;color:#4a626e}
+.quote .price{display:block;font-weight:700;font-size:16px;color:#20313a;margin-top:2px;font-variant-numeric:tabular-nums}
+
+.footer{display:flex;justify-content:flex-end;gap:12px;margin-top:26px;align-items:center}
+.pill{padding:11px 26px;border-radius:999px;border:1px solid #b7b3ac;background:#f6f3ee;color:#5a5751;
+  font:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.pill:hover{background:#efece6}
+.pill.primary{background:var(--accent);border-color:transparent;color:#fff}
+.pill.primary:hover{filter:brightness(.96)}
+.pill:disabled{opacity:.45;cursor:default;pointer-events:none}
+
+.toastWrap{position:fixed;top:16px;left:0;right:0;display:flex;justify-content:center;pointer-events:none;z-index:9}
+.toast{padding:10px 20px;border-radius:10px;color:#fff;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.18);animation:pop .18s ease-out}
+.toast.good{background:var(--good)} .toast.bad{background:var(--bad)} .toast.info{background:#5b788a}
+@keyframes pop{from{transform:translateY(-6px);opacity:0}}
+
+.invbar{display:flex;gap:18px;align-items:center;background:#e7e3db;border-radius:10px;padding:6px 14px;margin-top:12px;
+  font-size:14px;color:#4c4a44;min-height:36px;flex-wrap:wrap}
+.invbar .pos{color:var(--good);font-weight:700}.invbar .neg{color:var(--bad);font-weight:700}
+.invbar svg{vertical-align:-4px}
+
+.panel{background:var(--card);border-radius:18px;box-shadow:0 2px 10px rgba(60,55,45,.12);padding:28px 32px;max-width:760px;margin:30px auto}
+h1{font-size:24px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 6px}
+.formGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 18px;margin:18px 0 4px}
+.field label{display:block;font-size:12.5px;color:#6a675f;margin-bottom:4px;font-weight:600}
+.field select,.field input[type=text]{width:100%;padding:8px;border-radius:8px;border:1px solid #c5c1b9;background:#fff;font:inherit}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:#55524c;margin:10px 0 2px;cursor:pointer}
+.statsLine{font-size:13.5px;color:#6a675f;margin-top:16px}
+details.rules{margin-top:14px;font-size:14px;color:#55524c}
+details.rules summary{cursor:pointer;font-weight:600}
+details.rules ul{margin:8px 0 0;padding-left:20px}
+details.rules li{margin:4px 0}
+
+.resGrid{display:grid;grid-template-columns:repeat(4,auto);gap:6px 30px;margin:16px 0 14px;font-size:14px;color:#6a675f;justify-content:start}
+.resGrid b{display:block;font-size:20px;color:#333}
+.rlist{margin-top:6px}
+details.rrow{border-top:1px solid #dedad2}
+details.rrow summary{display:grid;grid-template-columns:44px 1fr 170px 60px;gap:10px;padding:10px 4px;cursor:pointer;align-items:center;font-size:14px;list-style:none}
+details.rrow summary::-webkit-details-marker{display:none}
+.sol{padding:2px 4px 12px 48px;font-size:14px;color:#4c4a44}
+.sol .leg{display:flex;gap:7px;align-items:center;padding:2px 0}
+.sol svg{flex:none}
+.ok{color:var(--good);font-weight:600}.err{color:var(--bad);font-weight:600}.mid{color:#a9760c;font-weight:600}
+.dim{color:#8a877f;font-weight:400}
+
+@media(max-width:900px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .cell.empty{display:none}
+  .formGrid{grid-template-columns:1fr 1fr}
+  #app{padding:16px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+/*ENGINE-START*/
+/* ---------- seeded RNG ---------- */
+function xmur3(str){
+  let h=1779033703^str.length;
+  for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}
+  return function(){h=Math.imul(h^(h>>>16),2246822507);h=Math.imul(h^(h>>>13),3266489909);return (h^=h>>>16)>>>0}
+}
+function mulberry32(a){
+  return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296}
+}
+class Rng{
+  constructor(seed){this.f=mulberry32(xmur3(String(seed))())}
+  next(){return this.f()}
+  int(a,b){return a+Math.floor(this.next()*(b-a+1))}
+  pick(arr){return arr[this.int(0,arr.length-1)]}
+  chance(p){return this.next()<p}
+  shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=this.int(0,i);[a[i],a[j]]=[a[j],a[i]]}return a}
+}
+
+/* ---------- items ---------- */
+const ITEM_ORDER=["wheat","oil","silver","copper"];
+const ITEMS={wheat:{name:"Wheat"},oil:{name:"Oil"},silver:{name:"Silver"},copper:{name:"Copper"}};
+
+function basketLabel(basket){
+  const parts=[];
+  for(const it of ITEM_ORDER){const q=basket[it]||0;if(q)parts.push((q>1?q+"× ":"")+ITEMS[it].name)}
+  return parts.join(" + ");
+}
+
+/* ---------- trade evaluation ----------
+   counts[i] = net executions of card i (+ = bought, − = sold).
+   Cash: buys pay the ask, sells receive the bid. */
+function evalCounts(markets,counts){
+  const inv={};let cash=0,trades=0;
+  for(let i=0;i<markets.length;i++){
+    const c=counts[i];if(!c)continue;
+    trades+=Math.abs(c);
+    const m=markets[i];
+    for(const it in m.basket)inv[it]=(inv[it]||0)+c*m.basket[it];
+    cash+= c>0 ? -c*m.ask : (-c)*m.bid;
+  }
+  for(const k in inv)if(inv[k]===0)delete inv[k];
+  return {inv,cash,trades};
+}
+function isFlat(inv){for(const k in inv)if(inv[k]!==0)return false;return true}
+function gcd(a,b){while(b){const t=a%b;a=b;b=t}return a}
+function reduceSolution(counts,cash){
+  let g=0;
+  for(const c of counts)g=gcd(g,Math.abs(c));
+  if(g>1){counts=counts.map(c=>c/g);cash=cash/g}
+  return {counts,cash};
+}
+
+/* ---------- solver ----------
+   Exhaustive search over net counts in [-3,3] per card with total
+   executions ≤ 8. Scale never matters (profit is linear in counts),
+   so every primitive arbitrage fits inside these bounds for the
+   rounds this generator produces.
+   Returns the best IRREDUCIBLE flat solution with positive cash, or
+   null. Irreducible = not decomposable into two smaller flat trade
+   sets — otherwise "2× the arb plus a profit-neutral wash trade"
+   would report double the real opportunity. */
+function isIrreducible(markets,x){
+  const idx=[];x.forEach((c,i)=>{if(c)idx.push(i)});
+  const itemSet={};
+  idx.forEach(i=>{for(const it in markets[i].basket)itemSet[it]=1});
+  const items=Object.keys(itemSet);
+  // cap[k][item]: max |inventory| the remaining legs k..end can absorb
+  const cap=Array.from({length:idx.length+1},()=>({}));
+  for(const it of items)cap[idx.length][it]=0;
+  for(let k=idx.length-1;k>=0;k--){
+    const m=markets[idx[k]];
+    for(const it of items)cap[k][it]=cap[k+1][it]+Math.abs(x[idx[k]])*(m.basket[it]||0);
+  }
+  const inv={};for(const it of items)inv[it]=0;
+  let found=false;
+  function dfs(k,l1,allFull){ // y_k ranges 0..x_k in x's sign direction
+    if(found)return;
+    for(const it of items){const v=inv[it];if(v!==0&&Math.abs(v)>cap[k][it])return}
+    if(k===idx.length){
+      if(l1>0&&!allFull){ // nonzero, ≠ x, flat (cap[end]=0 forces flat)
+        for(const it of items)if(inv[it]!==0)return;
+        found=true;
+      }
+      return;
+    }
+    const i=idx[k],m=markets[i],s=Math.sign(x[i]),lim=Math.abs(x[i]);
+    for(let a=0;a<=lim;a++){
+      if(a>0)for(const it in m.basket)inv[it]+=s*m.basket[it];
+      dfs(k+1,l1+a,allFull&&a===lim);
+      if(found)break;
+    }
+    for(const it in m.basket)inv[it]-=lim*s*m.basket[it];
+  }
+  dfs(0,0,true);
+  return !found;
+}
+function solveRound(markets,opts){
+  const maxCount=(opts&&opts.maxCount)||3;
+  const maxTotal=(opts&&opts.maxTotal)||8;
+  const n=markets.length;
+  const itemSet={};
+  markets.forEach(m=>{for(const it in m.basket)itemSet[it]=1});
+  const items=Object.keys(itemSet);
+  // cap[d][item]: max inventory a suffix of cards d..n-1 can still absorb
+  const cap=Array.from({length:n+1},()=>({}));
+  for(const it of items)cap[n][it]=0;
+  for(let d=n-1;d>=0;d--)for(const it of items)cap[d][it]=cap[d+1][it]+maxCount*(markets[d].basket[it]||0);
+  const counts=new Array(n).fill(0);
+  const inv={};for(const it of items)inv[it]=0;
+  const sols=[];
+  function dfs(d,cash,l1){
+    for(const it of items){const v=inv[it];if(v!==0&&Math.abs(v)>cap[d][it])return}
+    if(d===n){
+      if(l1>0&&cash>0)sols.push({counts:counts.slice(),profit:cash,trades:l1});
+      return;
+    }
+    const m=markets[d];
+    for(let c=-maxCount;c<=maxCount;c++){
+      const ac=Math.abs(c);
+      if(l1+ac>maxTotal)continue;
+      counts[d]=c;
+      if(c!==0)for(const it in m.basket)inv[it]+=c*m.basket[it];
+      dfs(d+1,cash+(c>0?-c*m.ask:(-c)*m.bid),l1+ac);
+      if(c!==0)for(const it in m.basket)inv[it]-=c*m.basket[it];
+    }
+    counts[d]=0;
+  }
+  dfs(0,0,0);
+  if(!sols.length)return null;
+  sols.sort((a,b)=>b.profit-a.profit||a.trades-b.trades);
+  for(const s of sols)if(isIrreducible(markets,s.counts))return s;
+  return sols[sols.length-1]; // unreachable: a minimal solution is always irreducible
+}
+
+/* ---------- round generation ----------
+   Every card quotes around fair value V. Decoy/no-arb cards strictly
+   bracket fair value (bid < V < ask), which provably contributes
+   negative cash to any flat combination — so only planted cards can
+   ever create profit, and no-arb rounds are no-arb by construction. */
+function tierValue(rng,d){
+  const r=[[2,12],[3,30],[5,60],[8,99]][d-1];
+  return rng.int(r[0],r[1]);
+}
+function spreadFor(rng,V){
+  return Math.max(1,Math.round(V*(0.03+rng.next()*0.07))+rng.int(0,1));
+}
+function pickArch(rng,d){
+  const table={
+    1:[["cross",.5],["basket",.5]],
+    2:[["cross",.3],["basket",.4],["basketQ",.3]],
+    3:[["basket",.2],["basketQ",.25],["basket3",.3],["chain",.25]],
+    4:[["basketQ",.2],["basket3",.3],["chain",.5]]
+  }[d];
+  let x=rng.next();
+  for(const [a,p] of table){x-=p;if(x<0)return a}
+  return table[table.length-1][0];
+}
+function plantCross(rng,arr,it,V,m){
+  const ask=Math.max(2,V-rng.int(0,1));                 // cheap ask
+  arr.push({basket:{[it]:1},ask,bid:Math.max(1,ask-spreadFor(rng,V))});
+  const bid=ask+m;                                      // rich bid on the other card
+  arr.push({basket:{[it]:1},bid,ask:bid+spreadFor(rng,V)});
+}
+function plantBasket(rng,arr,parts,V,m){
+  const basket={};for(const [it,q] of parts)basket[it]=q;
+  if(rng.chance(.5)){ // buy components, sell basket at a rich bid
+    let sum=0;
+    const comps=parts.map(([it,q])=>{
+      const ask=V[it]+rng.int(0,1);sum+=q*ask;
+      return {basket:{[it]:1},ask,bid:Math.max(1,ask-spreadFor(rng,V[it]))};
+    });
+    const bid=sum+m;
+    arr.push(...comps,{basket,bid,ask:bid+spreadFor(rng,bid)});
+  }else{ // buy basket at a cheap ask, sell components
+    let sum=0;
+    const comps=parts.map(([it,q])=>{
+      const bid=Math.max(1,V[it]-rng.int(0,1));sum+=q*bid;
+      return {basket:{[it]:1},bid,ask:bid+spreadFor(rng,V[it])};
+    });
+    const ask=sum-m;
+    arr.push(...comps,{basket,ask,bid:ask-spreadFor(rng,ask)});
+  }
+}
+function plantChain(rng,arr,A,B,C,V,m){
+  // buy {A,C}, sell {A,B}, buy B, sell C — nets flat, pays m
+  const ask2=V[A]+V[C]+rng.int(0,1);
+  const askB=V[B]+rng.int(0,1);
+  const bidC=Math.max(1,V[C]-rng.int(0,1));
+  const bid1=m+ask2+askB-bidC;
+  arr.push(
+    {basket:{[A]:1,[C]:1},ask:ask2,bid:Math.max(1,ask2-spreadFor(rng,ask2))},
+    {basket:{[B]:1},ask:askB,bid:Math.max(1,askB-spreadFor(rng,V[B]))},
+    {basket:{[C]:1},bid:bidC,ask:bidC+spreadFor(rng,V[C])},
+    {basket:{[A]:1,[B]:1},bid:bid1,ask:bid1+spreadFor(rng,bid1)}
+  );
+}
+function makeDecoy(rng,items,V,crossItem,tight){
+  for(let t=0;t<12;t++){
+    const k=rng.chance(.62)?1:2;
+    const its=rng.shuffle(items).slice(0,k);
+    if(k===1&&its[0]===crossItem)continue; // don't hand out a second market on the planted cross item
+    const basket={};for(const it of its)basket[it]=rng.chance(.15)?2:1;
+    let VB=0;for(const it in basket)VB+=basket[it]*V[it];
+    const w=tight?2:Math.max(2,Math.round(VB*0.08));
+    const bid=VB-rng.int(1,w),ask=VB+rng.int(1,w);
+    if(bid>=1)return {basket,bid,ask};
+  }
+  return null;
+}
+function tryGen(rng,p){
+  const arch=p.noArb?null:pickArch(rng,p.d);
+  const needItems=(arch==="basket3"||arch==="chain")?3:2;
+  const nItems=Math.max(needItems,Math.min(4,rng.int(2,p.d>=3?4:3)));
+  const items=rng.shuffle(ITEM_ORDER).slice(0,nItems);
+  const V={};for(const it of items)V[it]=tierValue(rng,p.d);
+  const markets=[];
+  let crossItem=null;
+  if(arch){
+    const m=p.d<=2?rng.int(1,3):rng.int(1,2);
+    if(arch==="cross"){crossItem=rng.pick(items);plantCross(rng,markets,crossItem,V[crossItem],m)}
+    else if(arch==="basket")plantBasket(rng,markets,[[items[0],1],[items[1],1]],V,m);
+    else if(arch==="basketQ")plantBasket(rng,markets,rng.chance(.25)?[[items[0],2]]:[[items[0],2],[items[1],1]],V,m);
+    else if(arch==="basket3")plantBasket(rng,markets,[[items[0],1],[items[1],1],[items[2],rng.chance(.3)?2:1]],V,m);
+    else plantChain(rng,markets,items[0],items[1],items[2],V,m);
+  }else if(rng.chance(.6)&&items.length>=2){
+    // tempting near-miss: a fair basket next to its fair components
+    const a=items[0],b=items[1],VB=V[a]+V[b];
+    const f=(basket,VV)=>({basket,bid:VV-rng.int(1,2),ask:VV+rng.int(1,2)});
+    markets.push(f({[a]:1,[b]:1},VB),f({[a]:1},V[a]),f({[b]:1},V[b]));
+  }
+  const target=Math.max(p.cards,markets.length);
+  let guard=0;
+  while(markets.length<target&&guard++<30){
+    const dc=makeDecoy(rng,items,V,crossItem,p.noArb&&rng.chance(.5));
+    if(dc)markets.push(dc);
+  }
+  if(markets.length<3||markets.length>8)return null;
+  for(const mk of markets){
+    if(!(Number.isInteger(mk.bid)&&Number.isInteger(mk.ask)&&mk.bid>=1&&mk.bid<mk.ask))return null;
+  }
+  return {markets:rng.shuffle(markets),slots:rng.shuffle([0,1,2,3,4,5,6,7]).slice(0,markets.length),d:p.d};
+}
+function genRound(rng,p){
+  for(let att=0;att<40;att++){
+    const r=tryGen(rng,p);
+    if(!r)continue;
+    const best=solveRound(r.markets);
+    if(p.noArb?best:!best)continue; // must match intent
+    r.best=best||null;
+    r.noArb=!!p.noArb;
+    return r;
+  }
+  // deterministic fallback: a simple cross-market round (always valid)
+  const it=rng.pick(ITEM_ORDER),V=10+rng.int(0,20),arr=[];
+  plantCross(rng,arr,it,V,2);
+  return {markets:arr,slots:rng.shuffle([0,1,2,3,4,5,6,7]).slice(0,arr.length),d:1,best:solveRound(arr),noArb:false};
+}
+function roundParams(idx,total,curve,noArbPct,rng){
+  const t=total<=1?1:idx/(total-1);
+  const d=curve==="easy"?rng.int(1,2):curve==="hard"?rng.int(3,4):Math.min(4,1+Math.floor(t*3.999));
+  const range=[[3,4],[4,6],[5,7],[6,8]][d-1];
+  return {d,cards:rng.int(range[0],range[1]),noArb:idx>0&&rng.chance(noArbPct)};
+}
+/*ENGINE-END*/
+
+/* ================= UI ================= */
+const ICONS={
+  wheat:s=>`<svg viewBox="0 0 64 64" width="${s}" height="${s}"><path d="M22 16 L18 7 L26 11 L32 5 L38 11 L46 7 L42 16 Z" fill="#b5854e" stroke="#7c5a30" stroke-width="2" stroke-linejoin="round"/><path d="M21 15 C14 24 11 33 11 43 C11 53 21 59 32 59 C43 59 53 53 53 43 C53 33 50 24 43 15 Z" fill="#d2a86b" stroke="#7c5a30" stroke-width="2"/><path d="M13 37 C20 41 44 41 51 37" fill="none" stroke="#b98e52" stroke-width="3"/><path d="M13 45 C20 49 44 49 51 45" fill="none" stroke="#b98e52" stroke-width="3" opacity=".65"/></svg>`,
+  oil:s=>`<svg viewBox="0 0 64 64" width="${s}" height="${s}"><path d="M15 13 V45 C15 51 22 56 32 56 C42 56 49 51 49 45 V13 Z" fill="#31373d" stroke="#1c2126" stroke-width="2"/><ellipse cx="32" cy="13" rx="17" ry="6" fill="#454d55" stroke="#1c2126" stroke-width="2"/><path d="M15 25 C22 29 42 29 49 25" fill="none" stroke="#1c2126" stroke-width="2"/><path d="M15 37 C22 41 42 41 49 37" fill="none" stroke="#1c2126" stroke-width="2"/><path d="M32 32 C29.4 36 28.2 38.2 28.2 40.2 a3.8 3.8 0 0 0 7.6 0 C35.8 38.2 34.6 36 32 32 Z" fill="#14181c"/></svg>`,
+  silver:s=>`<svg viewBox="0 0 64 64" width="${s}" height="${s}"><path d="M20 26 L44 26 L54 45 L10 45 Z" fill="#c4cbd2" stroke="#7f8891" stroke-width="2" stroke-linejoin="round"/><path d="M20 26 L28 16 L52 16 L44 26 Z" fill="#e6eaee" stroke="#7f8891" stroke-width="2" stroke-linejoin="round"/><path d="M44 26 L52 16 L61 34 L54 45 Z" fill="#aab2ba" stroke="#7f8891" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  copper:s=>`<svg viewBox="0 0 64 64" width="${s}" height="${s}"><ellipse cx="32" cy="37" rx="22" ry="13" fill="#b4581f" stroke="#7c3a12" stroke-width="2"/><ellipse cx="32" cy="30" rx="22" ry="13" fill="#d97a35" stroke="#7c3a12" stroke-width="2"/><ellipse cx="32" cy="30" rx="10" ry="5.5" fill="#8a4416" stroke="#7c3a12" stroke-width="2"/></svg>`
+};
+function iconsFor(basket){
+  let n=0;for(const it of ITEM_ORDER)n+=basket[it]||0;
+  const size=n<=1?56:n===2?48:38;
+  const parts=[];
+  for(const it of ITEM_ORDER){const q=basket[it]||0;for(let k=0;k<q;k++)parts.push(ICONS[it](size))}
+  return parts.join("");
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function fmtClock(ms){
+  const s=Math.max(0,Math.ceil(ms/1000));
+  return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+}
+
+const app=document.getElementById("app");
+const config={rounds:20,minutes:8,curve:"ramp",noArbPct:0.15,showInv:false,seed:""};
+let G=null,locked=false,toastT=null;
+
+/* ---------- start screen ---------- */
+function statsSummary(){
+  const a=loadStats();
+  if(!a.length)return "No games recorded on this machine yet.";
+  const played=a.reduce((s,g)=>s+g.played,0)||1;
+  const solved=a.reduce((s,g)=>s+g.solved,0);
+  const best=a.reduce((m,g)=>Math.max(m,g.solved),0);
+  return `${a.length} game${a.length>1?"s":""} played · ${Math.round(100*solved/played)}% of rounds solved · best game: ${best} solved`;
+}
+function renderStart(){
+  stopTimer();
+  app.innerHTML=`
+  <div class="panel">
+    <h1>Orderbook Game</h1>
+    <p class="sub">Optiver-style arbitrage trainer — combine buy &amp; sell quotes so you end flat with positive cash.</p>
+    <div class="formGrid">
+      <div class="field"><label>Rounds</label><select id="cfgRounds">${[10,20,30,40].map(v=>`<option value="${v}">${v}</option>`).join("")}</select></div>
+      <div class="field"><label>Time (minutes)</label><select id="cfgMin">${[2,4,6,8,10,12,16].map(v=>`<option value="${v}">${v}</option>`).join("")}</select></div>
+      <div class="field"><label>Difficulty</label><select id="cfgCurve">
+        <option value="ramp">Ramp up (like the test)</option><option value="easy">Easy only</option><option value="hard">Hard only</option></select></div>
+      <div class="field"><label>No-arb rounds (skip them)</label><select id="cfgNoArb">
+        <option value="0">0%</option><option value="0.15">~15%</option><option value="0.3">~30%</option></select></div>
+      <div class="field" style="grid-column:span 2"><label>Seed (optional — same seed, same game)</label>
+        <input type="text" id="cfgSeed" placeholder="random" value="${esc(config.seed)}"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="cfgInv"${config.showInv?" checked":""}> Show live inventory &amp; cash (training wheels)</label>
+    <div style="margin-top:18px"><button class="pill primary" id="startBtn">Start game</button></div>
+    <div class="statsLine">${esc(statsSummary())}</div>
+    <details class="rules"><summary>How to play</summary><ul>
+      <li>Each card is a market for the basket shown. <b>Sell for</b> is what you receive, <b>Buy for</b> is what you pay. Clicks adjust your net count on that card (the badge). Clicking the same card multiple times is allowed — and sometimes needed.</li>
+      <li>Find trades that leave <b>zero inventory in every item</b> and <b>positive cash</b>, then Submit. Size doesn't matter — the minimal combination is enough.</li>
+      <li>Some rounds have no opportunity: <b>Skip</b> them. <b>Reset</b> clears the round. One clock runs for the whole game, so budget your time.</li>
+    </ul></details>
+  </div>`;
+  document.getElementById("cfgRounds").value=String(config.rounds);
+  document.getElementById("cfgMin").value=String(config.minutes);
+  document.getElementById("cfgCurve").value=config.curve;
+  document.getElementById("cfgNoArb").value=String(config.noArbPct);
+  document.getElementById("startBtn").onclick=()=>{
+    config.rounds=+document.getElementById("cfgRounds").value;
+    config.minutes=+document.getElementById("cfgMin").value;
+    config.curve=document.getElementById("cfgCurve").value;
+    config.noArbPct=+document.getElementById("cfgNoArb").value;
+    config.showInv=document.getElementById("cfgInv").checked;
+    config.seed=document.getElementById("cfgSeed").value;
+    startGame();
+  };
+}
+
+/* ---------- game flow ---------- */
+function startGame(){
+  const seed=config.seed.trim()||Math.random().toString(36).slice(2,8);
+  G={cfg:{...config},seed,rng:new Rng(seed),idx:0,results:[],deadline:Date.now()+config.minutes*60000,over:false,timer:null,round:null,counts:[],attempts:0,roundStart:0};
+  locked=false;
+  beginRound();
+  G.timer=setInterval(tick,200);
+}
+function stopTimer(){if(G&&G.timer){clearInterval(G.timer);G.timer=null}}
+function beginRound(){
+  if(G.idx>=G.cfg.rounds){endGame("done");return}
+  const p=roundParams(G.idx,G.cfg.rounds,G.cfg.curve,G.cfg.noArbPct,G.rng);
+  G.round=genRound(G.rng,p);
+  G.counts=new Array(G.round.markets.length).fill(0);
+  G.attempts=0;
+  G.roundStart=Date.now();
+  renderPlay();
+}
+function tick(){
+  if(!G||G.over)return;
+  const rem=G.deadline-Date.now();
+  const el=document.getElementById("timeVal");
+  if(el){el.textContent=fmtClock(rem);el.classList.toggle("timeLow",rem<60000)}
+  if(rem<=0)endGame("time");
+}
+function endGame(reason){
+  if(!G||G.over)return;
+  G.over=true;
+  stopTimer();
+  if(reason==="time"&&G.round&&G.results.length<=G.idx){
+    G.results.push({idx:G.idx,outcome:"timeout",profit:null,redProfit:null,
+      best:G.round.best?G.round.best.profit:null,timeSec:Math.round((Date.now()-G.roundStart)/1000),
+      attempts:G.attempts,round:G.round});
+  }
+  saveStats();
+  renderResults(reason);
+}
+
+/* ---------- play screen ---------- */
+function cardHTML(i){
+  const m=G.round.markets[i];
+  return `<div class="cell"><div class="card" data-i="${i}" title="${esc(basketLabel(m.basket))}">
+    <div class="badge" id="badge-${i}">0</div>
+    <div class="art">${iconsFor(m.basket)}</div>
+    <div class="quotes">
+      <button type="button" class="quote" data-i="${i}" data-s="-1"><span class="lbl">Sell for</span><span class="price">$${m.bid}</span></button>
+      <button type="button" class="quote" data-i="${i}" data-s="1"><span class="lbl">Buy for</span><span class="price">$${m.ask}</span></button>
+    </div>
+  </div></div>`;
+}
+function renderPlay(){
+  const cells=new Array(8).fill(null);
+  G.round.slots.forEach((s,i)=>cells[s]=i);
+  app.innerHTML=`
+    <div class="progress">${G.idx+1} of ${G.cfg.rounds}</div>
+    <div class="hr"></div>
+    <div class="timerRow">Time Remaining:&nbsp; <b id="timeVal"></b></div>
+    ${G.cfg.showInv?'<div class="invbar" id="invbar"></div>':""}
+    <div class="grid" id="grid">${cells.map(i=>i===null?'<div class="cell empty"></div>':cardHTML(i)).join("")}</div>
+    <div class="footer">
+      <button class="pill" id="resetBtn">Reset</button>
+      <button class="pill" id="skipBtn">Skip</button>
+      <button class="pill primary" id="submitBtn" disabled>Submit</button>
+    </div>
+    <div class="toastWrap" id="toastWrap"></div>`;
+  document.getElementById("grid").addEventListener("click",e=>{
+    const b=e.target.closest(".quote");
+    if(b)onQuote(+b.dataset.i,+b.dataset.s);
+  });
+  document.getElementById("resetBtn").onclick=onReset;
+  document.getElementById("skipBtn").onclick=onSkip;
+  document.getElementById("submitBtn").onclick=onSubmit;
+  tick();
+  afterChange();
+}
+function onQuote(i,s){
+  if(locked||!G||G.over)return;
+  G.counts[i]+=s;
+  updateBadge(i);
+  afterChange();
+}
+function updateBadge(i){
+  const n=G.counts[i],el=document.getElementById("badge-"+i);
+  if(!el)return;
+  el.textContent=n>0?"+"+n:String(n);
+  el.className="badge"+(n>0?" pos":n<0?" neg":"");
+}
+function afterChange(){
+  const ev=evalCounts(G.round.markets,G.counts);
+  const btn=document.getElementById("submitBtn");
+  if(btn)btn.disabled=!(ev.trades>0&&isFlat(ev.inv));
+  const bar=document.getElementById("invbar");
+  if(bar){
+    let pos="";
+    for(const it of ITEM_ORDER){
+      const v=ev.inv[it]||0;
+      if(v)pos+=`<span>${ICONS[it](18)} <b class="${v>0?"pos":"neg"}">${v>0?"+"+v:v}</b></span>`;
+    }
+    bar.innerHTML=`<span>Cash: <b class="${ev.cash>0?"pos":ev.cash<0?"neg":""}">${ev.cash<0?"-":""}$${Math.abs(ev.cash)}</b></span>`+
+      (pos?`<span>Position:</span>${pos}`:'<span class="dim">Position: flat</span>');
+  }
+}
+function onReset(){
+  if(locked||!G||G.over)return;
+  G.counts.fill(0);
+  G.counts.forEach((_,i)=>updateBadge(i));
+  afterChange();
+}
+function pushResult(outcome,profit,redProfit){
+  G.results.push({idx:G.idx,outcome,profit,redProfit,
+    best:G.round.best?G.round.best.profit:null,
+    timeSec:Math.round((Date.now()-G.roundStart)/1000),
+    attempts:G.attempts,round:G.round});
+}
+function onSkip(){
+  if(locked||!G||G.over)return;
+  if(G.round.best){pushResult("skipWrong",null,null);toast(`There was +$${G.round.best.profit} available`,"bad")}
+  else{pushResult("skipRight",null,null);toast("Good skip — no arbitrage there","good")}
+  advance();
+}
+function onSubmit(){
+  if(locked||!G||G.over)return;
+  const ev=evalCounts(G.round.markets,G.counts);
+  if(!(ev.trades>0&&isFlat(ev.inv)))return;
+  if(ev.cash>0){
+    const red=reduceSolution(G.counts.slice(),ev.cash);
+    const best=G.round.best;
+    let msg=`Correct! +$${ev.cash}`;
+    if(best&&red.cash<best.profit)msg+=` — best was +$${best.profit}`;
+    else msg+=" — optimal";
+    pushResult("solved",ev.cash,red.cash);
+    toast(msg,"good");
+    advance();
+  }else{
+    G.attempts++;
+    toast(ev.cash===0?"That nets $0 — you need positive cash":`That loses $${-ev.cash}`,"bad");
+  }
+}
+function advance(){
+  locked=true;
+  setTimeout(()=>{
+    locked=false;
+    if(!G||G.over)return;
+    G.idx++;
+    beginRound();
+  },950);
+}
+function toast(msg,kind){
+  const w=document.getElementById("toastWrap");
+  if(!w)return;
+  w.innerHTML=`<div class="toast ${kind}">${esc(msg)}</div>`;
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>{if(w.isConnected)w.innerHTML=""},1700);
+}
+
+/* ---------- results ---------- */
+function legsHTML(round){
+  if(!round.best)return '<div class="leg dim">No arbitrage in this round — skipping was the right call.</div>';
+  const legs=[];
+  round.best.counts.forEach((c,i)=>{
+    if(!c)return;
+    const m=round.markets[i];
+    legs.push(`<div class="leg">${c>0?"Buy":"Sell"}${Math.abs(c)>1?" "+Math.abs(c)+"×":""} ${ICONS[Object.keys(m.basket).sort((a,b)=>ITEM_ORDER.indexOf(a)-ITEM_ORDER.indexOf(b))[0]](18)} <span>${esc(basketLabel(m.basket))}</span> @ $${c>0?m.ask:m.bid}${Math.abs(c)>1?" each":""}</div>`);
+  });
+  legs.push(`<div class="leg ok">→ +$${round.best.profit}</div>`);
+  return legs.join("");
+}
+function renderResults(reason){
+  const res=G.results;
+  const solved=res.filter(r=>r.outcome==="solved").length;
+  const skipsR=res.filter(r=>r.outcome==="skipRight").length;
+  const missed=res.filter(r=>r.outcome==="skipWrong"||r.outcome==="timeout").length;
+  const profit=res.reduce((s,r)=>s+(r.profit||0),0);
+  const remaining=Math.max(0,G.deadline-Date.now());
+  const head=reason==="time"?`⏱ Time's up in round ${res.length}`:`Done — ${fmtClock(remaining)} left on the clock`;
+  const rows=res.map(r=>{
+    let status,cls;
+    if(r.outcome==="solved"){
+      const opt=r.best!=null&&r.redProfit>=r.best;
+      cls=opt?"ok":"mid";
+      status=`✔ +$${r.profit}`+(opt?" — optimal":` (best $${r.best})`);
+    }else if(r.outcome==="skipRight"){cls="ok";status="✔ skipped — no arb existed"}
+    else if(r.outcome==="skipWrong"){cls="err";status=`✘ skipped — +$${r.best} was there`}
+    else{cls="err";status="⏱ time ran out"}
+    const att=r.attempts>0?` <span class="dim">· ${r.attempts} failed submit${r.attempts>1?"s":""}</span>`:"";
+    return `<details class="rrow"><summary><span class="dim">#${r.idx+1}</span><span class="${cls}">${status}${att}</span><span class="dim">difficulty ${r.round.d} · ${r.round.markets.length} cards</span><span class="dim">${r.timeSec}s</span></summary><div class="sol">${legsHTML(r.round)}</div></details>`;
+  }).join("");
+  app.innerHTML=`
+  <div class="panel">
+    <h1>${esc(head)}</h1>
+    <div class="resGrid">
+      <div>Solved<b>${solved} / ${G.cfg.rounds}</b></div>
+      <div>Correct skips<b>${skipsR}</b></div>
+      <div>Missed<b>${missed}</b></div>
+      <div>Profit banked<b>$${profit}</b></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      <button class="pill primary" id="againBtn">Play again</button>
+      <button class="pill" id="replayBtn">Replay this seed</button>
+      <button class="pill" id="menuBtn">Menu</button>
+    </div>
+    <p class="sub" style="margin-top:14px">Round review — expand a row to see the best trade set.</p>
+    <div class="rlist">${rows}</div>
+    <div class="statsLine">${esc(statsSummary())} · seed: ${esc(G.seed)}</div>
+  </div>`;
+  document.getElementById("againBtn").onclick=()=>{config.seed="";startGame()};
+  document.getElementById("replayBtn").onclick=()=>{config.seed=G.seed;startGame()};
+  document.getElementById("menuBtn").onclick=renderStart;
+}
+
+/* ---------- stats ---------- */
+function loadStats(){
+  try{return JSON.parse(localStorage.getItem("obg_stats")||"[]")}catch(e){return []}
+}
+function saveStats(){
+  try{
+    const a=loadStats();
+    a.push({t:Date.now(),solved:G.results.filter(r=>r.outcome==="solved").length,played:G.results.length,total:G.cfg.rounds});
+    localStorage.setItem("obg_stats",JSON.stringify(a.slice(-100)));
+  }catch(e){}
+}
+
+window._debug={get G(){return G},config,solveRound,genRound,evalCounts,Rng};
+renderStart();
+</script>
+</body>
+</html>

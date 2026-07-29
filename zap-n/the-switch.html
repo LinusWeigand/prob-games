@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<title>Zap-N — The Switch</title>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#f2f8fd; --panel:#ffffff; --edge:#d5e6f2; --banner-bg:#f2f9fe;
+    --text:#16222c; --dim:#7a8b99;
+    --accent:#89cff0;        /* baby blue — fills, borders, bars, glows */
+    --accent-strong:#4aa9de; /* deepened for large accent text & lit borders */
+    --accent-ink:#1b6c9c;    /* readable accent for small text */
+    --accent-soft:rgba(137,207,240,.2);
+    --good:#1d9e57; --bad:#d64560;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;
+    background:radial-gradient(1100px 650px at 50% -10%, #d8ecfa 0%, var(--bg) 60%);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex;align-items:center;justify-content:center;padding:16px;
+    -webkit-user-select:none;user-select:none;
+  }
+  #app{position:relative;width:min(860px,94vw)}
+
+  /* ---------- HUD ---------- */
+  #hud{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand .zap{background:var(--accent);color:#0e2a3d;font-weight:900;letter-spacing:.06em;padding:3px 8px;border-radius:6px;font-size:14px}
+  .brand .name{font-weight:800;letter-spacing:.18em;font-size:15px}
+  .stats{display:flex;gap:26px}
+  .stat{text-align:right;min-width:56px}
+  .stat label{display:block;font-size:10px;letter-spacing:.14em;color:var(--dim)}
+  .stat span{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+  #time.low{color:var(--bad)}
+
+  #timerbar{height:6px;background:#dcebf6;border-radius:3px;overflow:hidden;margin-bottom:16px}
+  #timerfill{height:100%;width:100%;background:var(--accent);border-radius:3px;transition:width .1s linear}
+  #timerfill.low{background:var(--bad)}
+
+  /* ---------- Stimulus boxes ---------- */
+  .box{position:relative;background:var(--panel);border:2px solid var(--edge);border-radius:14px;overflow:hidden;
+       box-shadow:0 2px 12px -8px rgba(23,60,88,.18);
+       transition:opacity .15s,filter .15s,border-color .1s,box-shadow .1s}
+  .box + .box{margin-top:14px}
+  .box.active{background:#f7fcff;border-color:var(--accent-strong);
+              box-shadow:0 0 0 1px var(--accent-strong),0 0 0 5px var(--accent-soft),0 12px 34px -14px rgba(74,169,222,.55)}
+  .box.dimmed{opacity:.4;filter:grayscale(.9)}
+  .box.flash-good{border-color:var(--good);box-shadow:0 0 0 1px var(--good),0 12px 34px -14px rgba(29,158,87,.45)}
+  .box.flash-bad{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad),0 12px 34px -14px rgba(214,69,96,.45);animation:shake .18s}
+  @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  .stimuli{display:flex;align-items:center;min-height:104px;padding:18px 22px;gap:22px}
+  .expr{
+    width:158px;flex:none;text-align:center;
+    font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:clamp(28px,5vw,40px);font-weight:700;letter-spacing:.02em;
+    border-right:1px dashed var(--edge);padding-right:22px;
+  }
+  .arrows{flex:1;display:flex;align-items:center;justify-content:center;gap:7px}
+  .set{display:flex;gap:7px}
+  .split{color:var(--dim);font-size:clamp(22px,4vw,30px);font-weight:300;margin:0 clamp(6px,2vw,16px)}
+  .arrow{width:clamp(20px,4vw,30px);height:clamp(20px,4vw,30px);fill:var(--text)}
+  .arrow.L{transform:scaleX(-1)}
+
+  .banner{padding:8px 12px;text-align:center;font-size:13px;letter-spacing:.08em;color:var(--dim);
+          background:var(--banner-bg);border-top:1px solid var(--edge);text-transform:uppercase;font-weight:600}
+  .box.active .banner{color:var(--accent-ink);background:var(--accent-soft)}
+
+  .float{position:absolute;top:10px;right:16px;font-size:20px;font-weight:800;pointer-events:none;
+         animation:floatUp .7s ease-out forwards;font-variant-numeric:tabular-nums;z-index:2}
+  .float.good{color:var(--good)} .float.bad{color:var(--bad)}
+  @keyframes floatUp{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-26px)}}
+
+  /* ---------- Answer buttons ---------- */
+  #answers{display:flex;gap:16px;justify-content:center;margin-top:20px}
+  .ans{flex:1;max-width:250px;display:flex;align-items:center;justify-content:center;gap:12px;
+       padding:15px;font-size:19px;font-weight:800;letter-spacing:.1em;color:var(--text);
+       background:var(--panel);border:2px solid var(--edge);border-radius:12px;cursor:pointer;
+       transition:border-color .1s,transform .05s,background .1s}
+  .ans:hover{border-color:var(--accent-strong)}
+  .ans.pressed,.ans:active{transform:translateY(1px);border-color:var(--accent-strong);background:#eaf6fd}
+  kbd{font-family:inherit;background:#eef5fb;border:1px solid var(--edge);border-bottom-width:3px;border-radius:6px;
+      padding:1px 9px;font-size:14px;color:var(--dim)}
+
+  /* ---------- Overlays ---------- */
+  .overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;
+           gap:18px;text-align:center;background:rgba(247,252,255,.88);backdrop-filter:blur(7px);border-radius:16px;padding:28px}
+  .overlay.hidden{display:none}
+  .overlay h1{font-size:clamp(30px,6vw,44px);letter-spacing:.14em;font-weight:900}
+  .overlay h1 em{color:var(--accent-strong);font-style:normal}
+  .tagline{color:var(--dim);max-width:520px;font-size:14px;line-height:1.5}
+  .rules{display:flex;flex-direction:column;gap:10px;margin:6px 0;max-width:580px;width:100%}
+  .rule{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--edge);border-radius:10px;
+        padding:10px 14px;font-size:14px;text-align:left;line-height:1.45}
+  .rule .tag{flex:none;font-size:10px;font-weight:800;letter-spacing:.1em;padding:4px 8px;border-radius:6px;
+             background:var(--accent-soft);color:var(--accent-ink);border:1px solid rgba(137,207,240,.6);min-width:86px;text-align:center}
+  .cta{margin-top:6px;padding:14px 44px;font-size:17px;font-weight:800;letter-spacing:.12em;color:#0e2a3d;
+       background:var(--accent);border:none;border-radius:12px;cursor:pointer;box-shadow:0 10px 30px -10px rgba(137,207,240,.95)}
+  .cta:hover{filter:brightness(.96)}
+  .hint{font-size:12px;color:var(--dim);letter-spacing:.06em}
+
+  #countdown-num{font-size:110px;font-weight:900;color:var(--accent-strong);font-variant-numeric:tabular-nums;
+                 text-shadow:0 0 60px rgba(137,207,240,.95);line-height:1}
+
+  #final-score{font-size:64px;font-weight:900;color:var(--accent-strong);font-variant-numeric:tabular-nums;line-height:1}
+  .results{display:grid;grid-template-columns:repeat(4,minmax(90px,1fr));gap:10px;width:100%;max-width:560px}
+  .res{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:10px}
+  .res label{display:block;font-size:10px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+  .res span{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+  #switchcost{font-size:13px;color:var(--dim)}
+  #switchcost b{color:var(--text)}
+
+  @media (max-width:600px){
+    .stimuli{gap:14px;padding:14px}
+    .expr{width:104px;padding-right:12px}
+    .results{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header id="hud">
+    <div class="brand"><span class="zap">ZAP-N</span><span class="name">THE SWITCH</span></div>
+    <div class="stats">
+      <div class="stat"><label>SCORE</label><span id="score">0</span></div>
+      <div class="stat"><label>STREAK</label><span id="streak">0</span></div>
+      <div class="stat"><label>TIME</label><span id="time">60</span></div>
+    </div>
+  </header>
+  <div id="timerbar"><div id="timerfill"></div></div>
+
+  <section class="box" id="box-top">
+    <div class="stimuli">
+      <div class="expr" id="expr-top">–</div>
+      <div class="arrows" id="arrows-top"></div>
+    </div>
+    <div class="banner">Is the result even?</div>
+  </section>
+
+  <section class="box" id="box-bottom">
+    <div class="stimuli">
+      <div class="expr" id="expr-bottom">–</div>
+      <div class="arrows" id="arrows-bottom"></div>
+    </div>
+    <div class="banner">Do the sets match?</div>
+  </section>
+
+  <div id="answers">
+    <button class="ans" id="btn-no"><kbd>←</kbd> NO</button>
+    <button class="ans" id="btn-yes">YES <kbd>→</kbd></button>
+  </div>
+
+  <!-- Start screen -->
+  <div class="overlay" id="start-overlay">
+    <h1>THE <em>SWITCH</em></h1>
+    <p class="tagline">Two prompts, one rule: the lit box decides your task.
+       Flip context fast — answer faster.</p>
+    <div class="rules">
+      <div class="rule"><span class="tag">TOP LIT</span>
+        <span>Solve the sum — is the result <b>even</b>? Ignore its arrows.</span></div>
+      <div class="rule"><span class="tag">BOTTOM LIT</span>
+        <span>Compare the arrow sets — do both sides of the “|” contain the same number of ◀ and ▶? Ignore its sum.</span></div>
+      <div class="rule"><span class="tag">ANSWER</span>
+        <span><b>←</b> No &nbsp;·&nbsp; <b>→</b> Yes &nbsp;·&nbsp; fast <b>and</b> correct scores most — <span id="rule-secs">60</span> seconds on the clock.</span></div>
+    </div>
+    <button class="cta" id="btn-start">START</button>
+    <div class="hint">or press SPACE</div>
+  </div>
+
+  <!-- Countdown -->
+  <div class="overlay hidden" id="countdown-overlay">
+    <div class="hint">GET READY</div>
+    <div id="countdown-num">3</div>
+  </div>
+
+  <!-- End screen -->
+  <div class="overlay hidden" id="end-overlay">
+    <h1>TIME’S <em>UP</em></h1>
+    <div id="final-score">0</div>
+    <div class="results">
+      <div class="res"><label>Rounds</label><span id="r-rounds">0</span></div>
+      <div class="res"><label>Accuracy</label><span id="r-acc">–</span></div>
+      <div class="res"><label>Avg reaction</label><span id="r-rt">–</span></div>
+      <div class="res"><label>Best streak</label><span id="r-streak">0</span></div>
+    </div>
+    <div id="switchcost"></div>
+    <button class="cta" id="btn-again">PLAY AGAIN</button>
+    <div class="hint">or press SPACE</div>
+  </div>
+
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------------- Config ---------------- */
+const GAME_SECONDS    = 60;    // session length
+const SWITCH_PROB     = 0.5;   // chance the lit box moves each round (1 = strict alternation)
+const NUM_MIN         = 1;     // smallest operand
+const NUM_MAX         = 9;     // largest operand
+const BASE_POINTS     = 100;   // per correct answer
+const SPEED_BONUS_MAX = 100;   // extra for an instant answer…
+const SPEED_LIMIT_MS  = 1500;  // …fading to 0 at this reaction time
+const WRONG_PENALTY   = 100;
+const FEEDBACK_GOOD_MS = 220;
+const FEEDBACK_BAD_MS  = 420;
+
+/* ---------------- DOM ---------------- */
+const $ = id => document.getElementById(id);
+const els = {
+  score: $('score'), streak: $('streak'), time: $('time'), fill: $('timerfill'),
+  boxTop: $('box-top'), boxBottom: $('box-bottom'),
+  exprTop: $('expr-top'), exprBottom: $('expr-bottom'),
+  arrowsTop: $('arrows-top'), arrowsBottom: $('arrows-bottom'),
+  yes: $('btn-yes'), no: $('btn-no'),
+  startOv: $('start-overlay'), cdOv: $('countdown-overlay'), cdNum: $('countdown-num'),
+  endOv: $('end-overlay'), finalScore: $('final-score'),
+  rRounds: $('r-rounds'), rAcc: $('r-acc'), rRt: $('r-rt'), rStreak: $('r-streak'),
+  switchcost: $('switchcost'),
+};
+
+/* ---------------- State ---------------- */
+const S = {
+  phase: 'idle',            // idle | countdown | playing | feedback | over
+  active: null,             // 'top' | 'bottom' — which box is lit
+  top: null, bottom: null,  // stimuli {math, arrows} for each box
+  isSwitch: null,           // did the task switch vs the previous round? (null on round 1)
+  t0: 0,                    // round start timestamp
+  endAt: 0, timerId: null, fbId: null, cdId: null,
+  score: 0, answered: 0, correct: 0, streak: 0, bestStreak: 0,
+  rts: [],                  // {rt, isSwitch} of correct answers
+};
+window.__S = S; // debug handle
+
+/* ---------------- Helpers ---------------- */
+const coin    = () => Math.random() < 0.5;
+const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick    = arr => arr[Math.floor(Math.random() * arr.length)];
+const shuffle = arr => {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+/* ---------------- Stimulus generation ---------------- */
+function genMath() {
+  const wantEven = coin();                        // keep yes/no 50:50
+  const a = randInt(NUM_MIN, NUM_MAX);
+  const parityB = wantEven ? a % 2 : 1 - a % 2;   // even sum ⇔ operands share parity
+  const options = [];
+  for (let n = NUM_MIN; n <= NUM_MAX; n++) if (n % 2 === parityB) options.push(n);
+  const b = pick(options);
+  return { a, b, isEven: (a + b) % 2 === 0 };
+}
+
+function makeSet(rightCount) {
+  return shuffle(Array.from({ length: 4 }, (_, i) => (i < rightCount ? 'R' : 'L')));
+}
+
+function genArrows() {
+  const match = coin();                           // keep yes/no 50:50
+  const countA = randInt(0, 4);                   // number of ▶ in set A
+  let countB;
+  if (match) {
+    countB = countA;
+  } else {
+    const near = [countA - 1, countA + 1].filter(c => c >= 0 && c <= 4);
+    const far  = [0, 1, 2, 3, 4].filter(c => c !== countA && !near.includes(c));
+    countB = (far.length && Math.random() > 0.75) ? pick(far) : pick(near); // mostly near misses
+  }
+  return { setA: makeSet(countA), setB: makeSet(countB), match };
+}
+
+/* ---------------- Rendering ---------------- */
+const ARROW = d =>
+  `<svg class="arrow ${d}" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5h9.5v-5L21 12l-8.5 7.5v-5H3z"/></svg>`;
+
+function arrowsHTML({ setA, setB }) {
+  const seg = s => s.map(ARROW).join('');
+  return `<span class="set">${seg(setA)}</span><span class="split">|</span><span class="set">${seg(setB)}</span>`;
+}
+
+function renderRound() {
+  els.exprTop.textContent    = `${S.top.math.a} + ${S.top.math.b}`;
+  els.arrowsTop.innerHTML    = arrowsHTML(S.top.arrows);
+  els.exprBottom.textContent = `${S.bottom.math.a} + ${S.bottom.math.b}`;
+  els.arrowsBottom.innerHTML = arrowsHTML(S.bottom.arrows);
+  els.boxTop.classList.toggle('active',    S.active === 'top');
+  els.boxTop.classList.toggle('dimmed',    S.active !== 'top');
+  els.boxBottom.classList.toggle('active', S.active === 'bottom');
+  els.boxBottom.classList.toggle('dimmed', S.active !== 'bottom');
+}
+
+function renderHUD() {
+  els.score.textContent  = S.score;
+  els.streak.textContent = S.streak;
+}
+
+function floatPoints(box, text, good) {
+  const el = document.createElement('div');
+  el.className = `float ${good ? 'good' : 'bad'}`;
+  el.textContent = text;
+  box.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+/* ---------------- Sound ---------------- */
+let audioCtx = null;
+function initAudio() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { /* sound is optional */ }
+}
+function tone(freq, dur, type = 'sine', vol = 0.1, delay = 0) {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime + delay;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t + dur + 0.03);
+}
+const sfx = {
+  good() { tone(880, .08, 'sine', .12); tone(1320, .1, 'sine', .09, .05); },
+  bad()  { tone(160, .2, 'square', .07); },
+  tick() { tone(620, .05, 'sine', .07); },
+  go()   { tone(980, .16, 'sine', .1); },
+};
+
+/* ---------------- Game flow ---------------- */
+function nextRound() {
+  const prev = S.active;
+  if (prev === null) {
+    S.active = coin() ? 'top' : 'bottom';
+    S.isSwitch = null;                            // round 1 is neither switch nor repeat
+  } else {
+    const move = Math.random() < SWITCH_PROB;
+    S.active = move ? (prev === 'top' ? 'bottom' : 'top') : prev;
+    S.isSwitch = S.active !== prev;
+  }
+  S.top    = { math: genMath(), arrows: genArrows() };  // fresh stimuli in BOTH boxes,
+  S.bottom = { math: genMath(), arrows: genArrows() };  // so the grey one can't be pre-solved
+  renderRound();
+  S.phase = 'playing';
+  S.t0 = performance.now();
+}
+
+function answer(isYes) {
+  if (S.phase !== 'playing') return;
+  const rt = performance.now() - S.t0;
+  const truth = S.active === 'top' ? S.top.math.isEven : S.bottom.arrows.match;
+  const correct = isYes === truth;
+  const box = S.active === 'top' ? els.boxTop : els.boxBottom;
+
+  S.phase = 'feedback';
+  S.answered++;
+
+  if (correct) {
+    S.correct++;
+    S.streak++;
+    S.bestStreak = Math.max(S.bestStreak, S.streak);
+    S.rts.push({ rt, isSwitch: S.isSwitch });
+    const bonus = Math.round(Math.max(0, (SPEED_LIMIT_MS - rt) / SPEED_LIMIT_MS * SPEED_BONUS_MAX));
+    const pts = BASE_POINTS + bonus;
+    S.score += pts;
+    sfx.good();
+    floatPoints(box, `+${pts}`, true);
+  } else {
+    S.streak = 0;
+    S.score = Math.max(0, S.score - WRONG_PENALTY);
+    sfx.bad();
+    floatPoints(box, `−${WRONG_PENALTY}`, false);
+  }
+  renderHUD();
+  box.classList.add(correct ? 'flash-good' : 'flash-bad');
+
+  S.fbId = setTimeout(() => {
+    box.classList.remove('flash-good', 'flash-bad');
+    if (performance.now() >= S.endAt) endGame();
+    else nextRound();
+  }, correct ? FEEDBACK_GOOD_MS : FEEDBACK_BAD_MS);
+}
+
+function tickTimer() {
+  if (S.phase === 'over') return;
+  const left = Math.max(0, S.endAt - performance.now());
+  els.time.textContent = Math.ceil(left / 1000);
+  els.fill.style.width = (left / (GAME_SECONDS * 1000) * 100) + '%';
+  const low = left <= 10000;
+  els.time.classList.toggle('low', low);
+  els.fill.classList.toggle('low', low);
+  if (left <= 0 && S.phase === 'playing') endGame(); // during feedback its timeout ends the game
+}
+
+function endGame() {
+  clearInterval(S.timerId); S.timerId = null;
+  clearTimeout(S.fbId);
+  S.phase = 'over';
+  els.boxTop.classList.remove('flash-good', 'flash-bad');
+  els.boxBottom.classList.remove('flash-good', 'flash-bad');
+  els.fill.style.width = '0%';
+  els.time.textContent = '0';
+
+  els.finalScore.textContent = S.score;
+  els.rRounds.textContent = S.answered;
+  els.rAcc.textContent = S.answered ? Math.round(S.correct / S.answered * 100) + '%' : '–';
+  const avg = list => Math.round(list.reduce((sum, r) => sum + r.rt, 0) / list.length);
+  els.rRt.textContent = S.rts.length ? avg(S.rts) + ' ms' : '–';
+  els.rStreak.textContent = S.bestStreak;
+
+  const sw = S.rts.filter(r => r.isSwitch === true);
+  const rp = S.rts.filter(r => r.isSwitch === false);
+  if (sw.length && rp.length) {
+    const a = avg(sw), b = avg(rp), cost = a - b;
+    els.switchcost.innerHTML =
+      `Repeat trials <b>${b} ms</b> &nbsp;·&nbsp; Switch trials <b>${a} ms</b> &nbsp;·&nbsp; Switch cost <b>${cost >= 0 ? '+' : ''}${cost} ms</b>`;
+  } else {
+    els.switchcost.textContent = '';
+  }
+  els.endOv.classList.remove('hidden');
+}
+
+function begin() {
+  if (S.phase !== 'idle' && S.phase !== 'over') return;
+  initAudio();
+  clearTimeout(S.fbId); clearInterval(S.timerId); clearInterval(S.cdId);
+  Object.assign(S, {
+    phase: 'countdown', active: null, isSwitch: null,
+    score: 0, answered: 0, correct: 0, streak: 0, bestStreak: 0, rts: [],
+  });
+  renderHUD();
+  els.time.textContent = GAME_SECONDS;
+  els.fill.style.width = '100%';
+  els.time.classList.remove('low');
+  els.fill.classList.remove('low');
+  els.startOv.classList.add('hidden');
+  els.endOv.classList.add('hidden');
+  els.cdOv.classList.remove('hidden');
+
+  const steps = ['3', '2', '1', 'GO'];
+  let i = 0;
+  els.cdNum.textContent = steps[i];
+  sfx.tick();
+  S.cdId = setInterval(() => {
+    i++;
+    if (i < steps.length) {
+      els.cdNum.textContent = steps[i];
+      steps[i] === 'GO' ? sfx.go() : sfx.tick();
+    } else {
+      clearInterval(S.cdId);
+      els.cdOv.classList.add('hidden');
+      startPlay();
+    }
+  }, 620);
+}
+
+function startPlay() {
+  S.endAt = performance.now() + GAME_SECONDS * 1000;
+  S.timerId = setInterval(tickTimer, 100);
+  tickTimer();
+  nextRound();
+}
+
+/* ---------------- Input ---------------- */
+function pressVisual(btn) {
+  btn.classList.add('pressed');
+  setTimeout(() => btn.classList.remove('pressed'), 130);
+}
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    if (e.repeat) return;
+    const yes = e.key === 'ArrowRight';
+    if (S.phase === 'playing') pressVisual(yes ? els.yes : els.no);
+    answer(yes);
+  } else if (e.key === ' ' || e.key === 'Enter') {
+    e.preventDefault();
+    begin();
+  }
+});
+
+els.yes.addEventListener('click', () => answer(true));
+els.no.addEventListener('click', () => answer(false));
+$('btn-start').addEventListener('click', begin);
+$('btn-again').addEventListener('click', begin);
+
+/* ---------------- Init (idle backdrop behind the start screen) ---------------- */
+$('rule-secs').textContent = GAME_SECONDS;
+S.top    = { math: genMath(), arrows: genArrows() };
+S.bottom = { math: genMath(), arrows: genArrows() };
+S.active = 'top';
+renderRound();
+
+})();
+</script>
+</body>
+</html>
