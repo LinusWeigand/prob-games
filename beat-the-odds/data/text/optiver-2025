@@ -1,0 +1,63 @@
+A two digit number is chosen at random. What is the probability, that the ones digit is greater than the tens digit.
+
+Two dice are rolled. What is the probability the difference of the two numbers shown is greater than 2?
+
+Three cards are pulled from a deck of 52 in which A = 1, 2 = 2, .., K = 13. What is the expected value of the product?
+
+An integer is randomly chosen from one to ten thousand inclusive. What is the probability that all of the digits of the number are different?
+
+
+Three two digit numbers are chosen at random. What is the probability that their sum is a three digit number?
+
+You flip 8 Coins. What is the probability you get three of the same in a row at any point?
+
+Consider a game where 100 $1 coins are flipped onto a table. Coins are then removed in pairs (one heads and one tails) until no more pairs are available. The player receives all of the remaining coins on the table. What is the fair value of this game?
+
+Start at the origin of the number line and continuously roll a dice. Let X be the result of the dice roll. If X = 1, 2 or 3 then you move X to the right. If X = 4, 5, 6 then you move X - 3 to the left. On average, how many rolls will it take before you are at least 10 steps away from the origin?
+
+Consider the following game. You get to roll a dice continuously until you roll the same number twice in a row. At this point, the game ends, and you are paid the sum of all your rolls. What is the expected value of this game?
+
+Two distinct integers from 1 to 9 (inclusive) are generated and summed. What is the probability that the sum is 10 or greater?
+
+You keep rolling a dice and you keep track of 6 different sums: the sum of all the 1s, the sum of all the 2s, the sum of all the 3s, the sum of all the 4s, the sum of all the 5s, and the sum of all the 6s. The game ends once one of these exceeds 100. What is the expected value of the number of even numbers that have been rolled?
+
+Consider a game where three dice are rolled and the payout for the game is two to the power of the sum of the three rolls. What is the expected value of this gameI?
+
+Thirteen cards are pulled from a standard deck of 52. What is the probability that you don't get an Ace?
+
+Three cards are pulled from a deck of 52 in which A = 1, 2 = 2, ..., K = 13. Ignoring any
+ordering of suits, what is the probability that the sequence of cards is in non-decreasing order? That is, each successive card is at least the value of the previous card.
+
+Two particles are each located at the opposite vertices of the same octagon. Each second, two coins are flipped, one for each particle, and this dictates whether that particle will move clock-wise or anticlockwise along an edge. On average, how many coins must be flipped for the two particles to meet?
+
+You roll 100 dice onto a table. You then repeatedly remove sets of 6 distinct dice (i.e. the set 1, 2, 3, 4, 5, and 6) until it is no longer possible to do so. What is the expected value of the sum of the dice left on the table?
+
+You roll a dice and keep the sum until you have hit a number exceeding one hundred. What is the probability that the last roll was a 2?
+
+You start with $10 and roll a dice 10 times. Every time you roll an even number, you add it to your score. Every time you roll an odd number, you subtract it from your score. What is the probability you go bankrupt at some point?
+
+A bag contains 10 red counters, 10 yellow counters and 10 blue counters. Counters are repeatedly drawn out until only two colours remain. What is the expected number of remaining counters?
+
+You and your friend each have a machine that outputs random integers from 1 to 10 inclusive. You get three numbers and your friend does too. What is the probability that you have no numbers in common with your friend?
+
+You keep rolling a dice and you keep track of 6 different sums: the sum of all the 1s, the sum of all the 2s, the sum of all the 3s, the sum of all the 4s, the sum of all the 5s, and the sum of all the 6s. The game ends once one of these exceeds 100. What is the expected value of the sum of all the dice that have been rolled?
+
+Three cards are pulled from a deck of 52 in which A = 1, 2 = 2, ..., K = 13. What is the probability that the three numbers obtained by this process all differ from each other by at least 2?
+
+A bag contains 10 red counters, 10 yellow counters and 10 blue counters. What is the probability that the first three counters drawn (without replacement) are all of a different colour?
+
+A particle is on a vertex of a hexagon. Each second, a coin is flipped. If the coin is Heads, the particle moves one length clockwise, if the coin is Tails, the particle moves one length anticlockwise. What is the expected time for it to return to its starting point?
+
+You flip 7 Coins. What is the probability you have an odd number of Heads?
+
+An integer is randomly chosen from one to one million inclusive. What is the probability the number contains the digit "7" at least once?
+
+You and your friend each have a machine that outputs random integers from 1 to 10 inclusive. You get two numbers and sum them; your friend does the same from her machine.What is the probability that you have the same sum?
+
+What is the probability of rolling six dice and getting at least two pairs?
+
+A particle is on a vertex of a decagon. Each second, a dice is rolled. If the dice is 1 or 2, the particle moves one length clockwise, if the dice is 3 or 4, the particle moves one length anticlockwise, if the dice is 5 or 6, the particle does not move. What is the expected time for it to reach the vertex that is initially furthest away?
+
+You start with $30 and roll a dice 10 times. Every time you roll an even number, you add it to your score. Every time you roll an odd number, you subtract it from your score. What is your expected final bankroll?
+ 
+You’re given two red cards and two black cards. The cards are shuffled and placed face down. You flip them over one at a time. You start with $100, and before revealing each card, you can choose how much to bet. If the card is red, you win double your bet. If it’s black, you lose the amount you bet. What’s the optimal betting strategy in this scenario? Now, suppose there’s a $20 entry fee to play the game. How does that affect your strategy?

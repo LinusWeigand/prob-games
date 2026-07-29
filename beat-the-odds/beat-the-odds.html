@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beat the Odds</title>
+<style>
+  :root{
+    --ink:        #1b1b1f;
+    --ink-soft:   #4a4a52;
+    --ink-faint:  #8b8b93;
+    --line:       #e4e4e8;
+    --cell:       #f7f8f9;
+    --cell-hover: #eceef0;
+    --magenta:    #b3117e;
+    --magenta-dk: #8e0d64;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{ height:100%; }
+
+  body{
+    margin:0;
+    background:#fff;
+    color:var(--ink);
+    font-family:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  /* ---------------------------------------------------------------- start */
+
+  #start{
+    min-height:100vh;
+    display:none;
+    flex-direction:column;
+    justify-content:center;
+    padding:0 0 60px;
+  }
+  #start.active{ display:flex; }
+
+  .start-inner{ padding:0 7vw; }
+
+  .brand{
+    font-size:13px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--magenta);
+    font-weight:600;
+    margin-bottom:14px;
+  }
+  h1{
+    margin:0 0 14px;
+    font-size:44px;
+    font-weight:600;
+    letter-spacing:-.01em;
+  }
+  .lede{
+    margin:0 0 40px;
+    font-size:16px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    max-width:640px;
+  }
+  .lede b{ font-weight:600; color:var(--ink); }
+
+  .modes{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0,1fr));
+    border-top:1px solid var(--line);
+    border-left:1px solid var(--line);
+    max-width:1180px;
+  }
+  .mode{
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    background:var(--cell);
+    padding:30px 28px 32px;
+    text-align:left;
+    font:inherit;
+    color:inherit;
+    cursor:pointer;
+    transition:background .12s ease;
+  }
+  .mode:hover{ background:var(--cell-hover); }
+  .mode-title{ font-size:20px; font-weight:600; margin-bottom:8px; }
+  .mode-sub{ font-size:14px; line-height:1.55; color:var(--ink-soft); }
+
+  .dbline{
+    margin-top:26px;
+    font-size:13px;
+    color:var(--ink-faint);
+  }
+
+  /* ----------------------------------------------------------------- quiz */
+
+  #quiz{ min-height:100vh; display:none; flex-direction:column; }
+  #quiz.active{ display:flex; }
+
+  .topbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    padding:22px 26px 0;
+    font-size:12.5px;
+    color:var(--ink-faint);
+  }
+  .counter{ color:var(--ink); font-weight:400; }
+  .timer.low{ color:var(--magenta); font-weight:600; }
+
+  .stem{
+    padding:52px 7vw 0;
+    flex:1 0 auto;
+  }
+  .qtext{
+    font-size:26px;
+    line-height:1.45;
+    font-weight:600;
+    max-width:64%;
+    margin:0;
+    white-space:pre-wrap;
+  }
+  .hint{
+    margin:38px 0 0;
+    font-size:15px;
+    font-weight:400;
+    color:var(--ink);
+  }
+
+  .grid{
+    margin-top:46px;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    border-top:1px solid var(--line);
+  }
+  .opt{
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    background:var(--cell);
+    min-height:104px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px 22px;
+    text-align:center;
+    font:inherit;
+    font-size:17px;
+    color:var(--ink);
+    cursor:pointer;
+    transition:background .1s ease, box-shadow .1s ease;
+  }
+  .opt:nth-child(3n+1){ border-left:1px solid var(--line); }
+  .opt:hover{ background:var(--cell-hover); }
+  .opt.selected{
+    background:#fff;
+    box-shadow:inset 0 0 0 2px var(--magenta);
+    font-weight:600;
+  }
+  .opt.skip{ color:var(--ink-faint); }
+
+  .actions{
+    display:flex;
+    justify-content:flex-end;
+    padding:18px 26px 30px;
+  }
+  .submit{
+    background:var(--magenta);
+    color:#fff;
+    border:0;
+    border-radius:3px;
+    font:inherit;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 20px;
+    cursor:pointer;
+    transition:background .12s ease, opacity .12s ease;
+  }
+  .submit:hover{ background:var(--magenta-dk); }
+  .submit:disabled{ opacity:.4; cursor:not-allowed; }
+
+  /* -------------------------------------------------------------- results */
+
+  #results{ padding:46px 7vw 80px; }
+
+  .score{
+    font-size:40px;
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  .score-sub{ font-size:15px; color:var(--ink-soft); margin:0 0 34px; }
+
+  .review{ border-top:1px solid var(--line); max-width:1000px; }
+  .row{
+    border-bottom:1px solid var(--line);
+    padding:18px 0 20px;
+    display:grid;
+    grid-template-columns:34px 1fr;
+    gap:14px;
+  }
+  .mark{
+    font-size:15px;
+    line-height:1.5;
+    font-weight:700;
+  }
+  .mark.ok{ color:#1a7f4b; }
+  .mark.no{ color:var(--magenta); }
+  .rq{ font-size:15px; line-height:1.55; font-weight:600; margin:0 0 8px; white-space:pre-wrap; }
+  .ra{ font-size:13.5px; line-height:1.6; color:var(--ink-soft); margin:0; }
+  .ra .tag{
+    display:inline-block;
+    font-size:11px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:1px 6px;
+    margin-right:8px;
+  }
+  .note{ font-size:13px; color:var(--ink-faint); margin:8px 0 0; line-height:1.6; }
+
+  .again{ margin-top:34px; }
+
+  @media (max-width:820px){
+    .qtext{ max-width:100%; font-size:21px; }
+    .grid{ grid-template-columns:repeat(2,1fr); }
+    .opt:nth-child(3n+1){ border-left:0; }
+    .opt:nth-child(2n+1){ border-left:1px solid var(--line); }
+    .modes{ grid-template-columns:1fr; }
+    h1{ font-size:32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ START ==== -->
+<section id="start" class="screen active">
+  <div class="start-inner">
+    <div class="brand">Optiver &middot; IMC</div>
+    <h1>Beat the Odds</h1>
+    <p class="lede">
+      Mental-maths and probability questions from the Optiver and IMC assessments.
+      Every question asks you to <b>select the answer that is closest</b> &mdash; you are
+      not expected to compute the exact value.
+    </p>
+
+    <div class="modes">
+      <button class="mode" data-mode="timed">
+        <div class="mode-title">15 questions &middot; timed</div>
+        <div class="mode-sub">
+          15 randomly drawn questions, shuffled.<br>
+          2:00 on the clock for each one &mdash; when it runs out the question is
+          skipped automatically.
+        </div>
+      </button>
+      <button class="mode" data-mode="all">
+        <div class="mode-title">Full database &middot; untimed</div>
+        <div class="mode-sub">
+          Every question in the database, shuffled.<br>
+          No clock. Work through them at your own pace.
+        </div>
+      </button>
+      <button class="mode" data-mode="extended">
+        <div class="mode-title">15 questions &middot; timed &middot; extended</div>
+        <div class="mode-sub">
+          Same format, drawn from the real Optiver questions <b>plus</b> 151
+          extra practice questions written in the same style.<br>
+          2:00 per question.
+        </div>
+      </button>
+    </div>
+
+    <p class="dbline" id="dbline"></p>
+  </div>
+</section>
+
+<!-- ============================================================= QUIZ ==== -->
+<section id="quiz" class="screen">
+  <div class="topbar">
+    <div class="counter" id="counter">1 / 15</div>
+    <div class="timer" id="timer">Question time left: 2:00</div>
+  </div>
+
+  <div class="stem">
+    <p class="qtext" id="qtext"></p>
+    <p class="hint">Select the answer that is closest.</p>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="actions">
+    <button class="submit" id="submit" disabled>Submit</button>
+  </div>
+</section>
+
+<!-- ========================================================== RESULTS ==== -->
+<section id="results" class="screen">
+  <p class="score" id="score"></p>
+  <p class="score-sub" id="scoreSub"></p>
+  <div class="review" id="review"></div>
+  <div class="again">
+    <button class="submit" id="restart">Back to start</button>
+  </div>
+</section>
+
+<script src="questions.js"></script>
+<script src="questions-extra.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var TIMED_COUNT   = 15;
+  var SECONDS_PER_Q = 120;
+
+  var el = function (id) { return document.getElementById(id); };
+
+  var state = {
+    mode: "timed",
+    deck: [],
+    index: 0,
+    picked: null,     // index into options, or "skip", or null
+    answers: [],
+    timer: null,
+    left: 0
+  };
+
+  /* --------------------------------------------------------------- utils */
+
+  function shuffle(a) {
+    var arr = a.slice();
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function mmss(s) {
+    var m = Math.floor(s / 60);
+    var r = s % 60;
+    return m + ":" + (r < 10 ? "0" : "") + r;
+  }
+
+  function show(id) {
+    ["start", "quiz", "results"].forEach(function (s) {
+      el(s).classList.toggle("active", s === id);
+    });
+  }
+
+  /* --------------------------------------------------------------- start */
+
+  // The extended pool is Optiver-only: the IMC questions come from a different
+  // quiz format (shorter clock, easier) so they are left out of the practice set.
+  var OPTIVER  = QUESTIONS.filter(function (q) { return q.source === "Optiver"; });
+  var EXTENDED = OPTIVER.concat(QUESTIONS_EXTRA);
+
+  (function fillDbLine() {
+    el("dbline").textContent =
+      QUESTIONS.length + " real questions — " + OPTIVER.length + " Optiver, " +
+      (QUESTIONS.length - OPTIVER.length) + " IMC. " +
+      "Extended pool adds " + QUESTIONS_EXTRA.length +
+      " practice questions for a total of " + EXTENDED.length + ".";
+  })();
+
+  Array.prototype.forEach.call(document.querySelectorAll(".mode"), function (b) {
+    b.addEventListener("click", function () { begin(b.dataset.mode); });
+  });
+
+  function begin(mode) {
+    state.mode    = mode;
+    state.deck    = shuffle(mode === "extended" ? EXTENDED : QUESTIONS);
+    if (mode !== "all") state.deck = state.deck.slice(0, TIMED_COUNT);
+    state.index   = 0;
+    state.answers = [];
+    show("quiz");
+    render();
+  }
+
+  /* ---------------------------------------------------------------- quiz */
+
+  function render() {
+    var q = state.deck[state.index];
+    state.picked = null;
+
+    el("counter").textContent = (state.index + 1) + " / " + state.deck.length;
+    el("qtext").textContent   = q.text;
+
+    var grid = el("grid");
+    grid.innerHTML = "";
+    q.options.forEach(function (opt, i) {
+      var b = document.createElement("button");
+      b.className   = "opt";
+      b.textContent = opt;
+      b.addEventListener("click", function () { pick(i); });
+      grid.appendChild(b);
+    });
+    var skip = document.createElement("button");
+    skip.className   = "opt skip";
+    skip.textContent = "Skip";
+    skip.addEventListener("click", function () { pick("skip"); });
+    grid.appendChild(skip);
+
+    el("submit").disabled = true;
+
+    startTimer();
+  }
+
+  function pick(which) {
+    state.picked = which;
+    var cells = el("grid").children;
+    for (var i = 0; i < cells.length; i++) {
+      var isThis = (which === "skip") ? (i === cells.length - 1) : (i === which);
+      cells[i].classList.toggle("selected", isThis);
+    }
+    el("submit").disabled = false;
+  }
+
+  function startTimer() {
+    clearInterval(state.timer);
+    var t = el("timer");
+
+    if (state.mode === "all") {          // the untimed mode is the only clockless one
+      t.textContent = "";
+      t.classList.remove("low");
+      return;
+    }
+
+    state.left = SECONDS_PER_Q;
+    paint();
+    state.timer = setInterval(function () {
+      state.left--;
+      paint();
+      if (state.left <= 0) {
+        clearInterval(state.timer);
+        state.picked = null;      // ran out of time = skipped
+        advance();
+      }
+    }, 1000);
+
+    function paint() {
+      t.textContent = "Question time left: " + mmss(Math.max(0, state.left));
+      t.classList.toggle("low", state.left <= 15);
+    }
+  }
+
+  el("submit").addEventListener("click", advance);
+
+  function advance() {
+    clearInterval(state.timer);
+    var q = state.deck[state.index];
+    state.answers.push({
+      q: q,
+      picked: (state.picked === "skip" || state.picked === null) ? null : state.picked,
+      correct: state.picked === q.answer
+    });
+    state.index++;
+    if (state.index >= state.deck.length) finish();
+    else render();
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (!el("quiz").classList.contains("active")) return;
+    var q = state.deck[state.index];
+    if (e.key >= "1" && e.key <= String(q.options.length)) pick(parseInt(e.key, 10) - 1);
+    else if (e.key === "s" || e.key === "S" || e.key === "6") pick("skip");
+    else if (e.key === "Enter" && state.picked !== null) advance();
+  });
+
+  /* ------------------------------------------------------------- results */
+
+  function finish() {
+    var right = state.answers.filter(function (a) { return a.correct; }).length;
+    var total = state.answers.length;
+
+    el("score").textContent = right + " / " + total;
+    var label = {
+      timed:    "timed run, 15 shuffled questions from the real set",
+      all:      "full database, untimed",
+      extended: "timed run, 15 shuffled questions from the extended pool"
+    }[state.mode];
+    el("scoreSub").textContent =
+      Math.round((right / total) * 100) + "% correct — " + label;
+
+    var rev = el("review");
+    rev.innerHTML = "";
+    state.answers.forEach(function (a) {
+      var row = document.createElement("div");
+      row.className = "row";
+
+      var mark = document.createElement("div");
+      mark.className   = "mark " + (a.correct ? "ok" : "no");
+      mark.textContent = a.correct ? "✓" : "✗";
+
+      var body = document.createElement("div");
+
+      var qp = document.createElement("p");
+      qp.className   = "rq";
+      qp.textContent = a.q.text;
+
+      var ap = document.createElement("p");
+      ap.className = "ra";
+      var tag = document.createElement("span");
+      tag.className   = "tag";
+      tag.textContent = a.q.source +
+        (a.q.origin === "generated" ? " · practice" : "");
+      ap.appendChild(tag);
+      ap.appendChild(document.createTextNode(
+        "Your answer: " + (a.picked === null ? "skipped" : a.q.options[a.picked]) +
+        "   ·   Correct: " + a.q.options[a.q.answer]
+      ));
+
+      var np = document.createElement("p");
+      np.className   = "note";
+      np.textContent = a.q.note;
+
+      body.appendChild(qp);
+      body.appendChild(ap);
+      body.appendChild(np);
+      row.appendChild(mark);
+      row.appendChild(body);
+      rev.appendChild(row);
+    });
+
+    show("results");
+    window.scrollTo(0, 0);
+  }
+
+  el("restart").addEventListener("click", function () {
+    show("start");
+    window.scrollTo(0, 0);
+  });
+})();
+</script>
+</body>
+</html>
