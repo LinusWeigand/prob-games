@@ -494,6 +494,33 @@
   <div class="actions">
     <button class="submit" id="submit" disabled>Submit</button>
   </div>
+
+  <div class="study-body">
+    <div class="study-answer" id="quiz-breakdown">
+      <div class="study-verdict" id="quiz-verdict"></div>
+      <div class="study-card">
+        <div class="study-section">
+          <div class="study-label">Triage (solving framework)</div>
+          <div class="study-quadrant" id="quiz-quadrant"></div>
+        </div>
+        <div class="study-section">
+          <div class="study-label">Technique</div>
+          <div class="study-technique" id="quiz-technique"></div>
+        </div>
+        <div class="study-section">
+          <div class="study-label">Formula</div>
+          <div class="study-formula" id="quiz-formula"></div>
+        </div>
+        <div class="study-section">
+          <div class="study-label">Solution</div>
+          <p class="study-solution" id="quiz-solution"></p>
+        </div>
+      </div>
+      <div class="study-grade">
+        <button class="study-next-btn" id="quiz-next">Next</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ======================================================= FLASHCARD ==== -->
@@ -751,21 +778,89 @@
 
   el("submit").addEventListener("click", advance);
 
+  var quizBreakdownShown = false;
+
   function advance() {
     clearInterval(state.timer);
     var q = state.deck[state.index];
+    var picked = state.picked;
+    var correct = picked === q.answer;
+    var skipped = picked === "skip" || picked === null;
+
     state.answers.push({
       q: q,
-      picked: (state.picked === "skip" || state.picked === null) ? null : state.picked,
-      correct: state.picked === q.answer
+      picked: skipped ? null : picked,
+      correct: correct
     });
+
+    if (state.mode === "extended") {
+      quizBreakdownShown = true;
+      el("submit").style.display = "none";
+
+      var cells = el("grid").children;
+      for (var i = 0; i < cells.length; i++) {
+        if (i === q.answer) {
+          cells[i].classList.add("study-correct");
+        } else if (i === picked) {
+          cells[i].classList.add("study-wrong");
+        }
+        cells[i].classList.add("study-locked");
+      }
+
+      var verdict = el("quiz-verdict");
+      if (skipped) {
+        verdict.textContent = "Skipped — correct answer: " + q.options[q.answer];
+        verdict.className   = "study-verdict no";
+      } else if (correct) {
+        verdict.textContent = "Correct!";
+        verdict.className   = "study-verdict ok";
+      } else {
+        verdict.textContent = "Incorrect — you picked " + q.options[picked] + ", correct: " + q.options[q.answer];
+        verdict.className   = "study-verdict no";
+      }
+
+      var cls = CLASSIFY[q.id];
+      if (cls) {
+        var info = QUADRANT_INFO[cls.q];
+        el("quiz-quadrant").textContent  = cls.q + " · " + info.full + " → " + info.weapon;
+        el("quiz-technique").textContent = cls.t;
+        el("quiz-formula").textContent   = cls.f;
+      } else {
+        el("quiz-quadrant").textContent  = "—";
+        el("quiz-technique").textContent = "No classification available";
+        el("quiz-formula").textContent   = "";
+      }
+      el("quiz-solution").textContent = q.note;
+      el("quiz-breakdown").classList.add("visible");
+      return;
+    }
+
     state.index++;
     if (state.index >= state.deck.length) finish();
     else render();
   }
 
+  function quizBreakdownNext() {
+    if (!quizBreakdownShown) return;
+    quizBreakdownShown = false;
+    el("quiz-breakdown").classList.remove("visible");
+    el("submit").style.display = "";
+    state.index++;
+    if (state.index >= state.deck.length) finish();
+    else render();
+  }
+
+  el("quiz-next").addEventListener("click", quizBreakdownNext);
+
   document.addEventListener("keydown", function (e) {
     if (!el("quiz").classList.contains("active")) return;
+    if (quizBreakdownShown) {
+      if (e.key === "Enter" || e.key === " " || e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        quizBreakdownNext();
+      }
+      return;
+    }
     var q = state.deck[state.index];
     if (e.key >= "1" && e.key <= String(q.options.length)) pick(parseInt(e.key, 10) - 1);
     else if (e.key === "s" || e.key === "S" || e.key === "6") pick("skip");
