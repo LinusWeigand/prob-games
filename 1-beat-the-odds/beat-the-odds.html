@@ -807,6 +807,8 @@
         cells[i].classList.add("study-locked");
       }
 
+      el("counter").textContent = (state.index + 1) + " / " + state.deck.length + "  ·  " + q.id;
+
       var verdict = el("quiz-verdict");
       if (skipped) {
         verdict.textContent = "Skipped — correct answer: " + q.options[q.answer];
@@ -981,6 +983,8 @@
     el("fc-flip-area").style.display = "none";
     el("fc-hint").textContent = "";
 
+    el("fc-hint").textContent = q.id;
+
     if (cls) {
       var info = QUADRANT_INFO[cls.q];
       el("fc-quadrant").textContent  = cls.q + " · " + info.full + " → " + info.weapon;
@@ -1133,6 +1137,8 @@
       }
       cells[i].classList.add("study-locked");
     }
+
+    el("study-hint").textContent = q.id;
 
     var verdict = el("study-verdict");
     if (skipped) {

@@ -87,6 +87,57 @@ For digit problems, count **by position** rather than listing: "how many choices
 first digit, then the second". Strictly increasing digits = `C(9,3)` because choosing the
 set determines the order `[x001]`.
 
+**Gaps on a circle.** For `n` uniform random points on a circle, the probability that
+every arc between consecutive points exceeds a fraction `d` of the circumference:
+
+```
+P(all gaps > d) = (1 − nd)^(n−1)        for d ≤ 1/n
+```
+
+- Watch hands, all angles > 90° → `n = 3`, `d = 90/360 = 1/4`:
+  `(1 − 3/4)² = 1/16 = 0.0625` `[opt-p06]`
+
+Derive it by fixing one point, substituting out the constraint with ordered positions, and
+integrating — or by inclusion-exclusion on "at least one gap ≤ d".
+
+**Stars and bars — distributing identical items into bins.** The number of non-negative
+integer solutions to `x₁ + x₂ + … + xₖ = n` is:
+
+```
+C(n + k − 1, k − 1)
+```
+
+For **≤ n** instead of **= n**, add a slack variable (`x₁ + … + xₖ + w = n`), turning it
+into k+1 variables with equality:
+
+```
+solutions to x₁ + … + xₖ ≤ n  =  C(n + k, k)
+```
+
+- Three two-digit numbers sum to a three-digit number → substitute `xᵢ = aᵢ − 10`,
+  count `x₁+x₂+x₃ ≤ 69` with `xᵢ ∈ {0,…,89}` (upper bound non-binding):
+  `1 − C(72,3)/90³ = 1 − 59640/729000 = 0.918` `[opt-r05]`
+
+**Fibonacci — adjacency constraints on binary sequences.** Count sequences of n
+coins/bits where no two Heads (or 1s) are adjacent. Condition on the last position:
+
+```
+a(n) = a(n−1) + a(n−2)        a(1) = 2,  a(2) = 3
+         ↑ ends T    ↑ ends H (forces T before it)
+```
+
+This is the Fibonacci recurrence (offset by two): `a(n) = F(n+2)`.
+
+```
+n:    1   2   3   4   5   6   7   8
+a(n): 2   3   5   8   13  21  34  55
+```
+
+- 5 coins, no two adjacent Heads → `13/32 = 0.406` `[x060]`
+
+The same recurrence appears anytime you count binary strings with a "no two consecutive"
+constraint — flips, steps, selections along a line.
+
 ### A4 · Sequential conditioning — draw one at a time
 
 For without-replacement problems, don't reach for `C(n,k)` — walk the draws and multiply.
@@ -267,6 +318,20 @@ lazy walk (moves w.p. c):       divide by c
 - Square, opposite vertex → `2 × 2 = 4` `[x099]`
 - Decagon, opposite vertex, moves only 2/3 of the time → `5 × 5 / (2/3) = 37.5` `[opt-r24]`
 
+**Variable step sizes — variance stopping time.** When steps are larger than ±1 and the
+target is a *distance* ("at least d away"), the cycle/line formulas no longer apply
+directly. Instead use the martingale approach: position² − t·E[X²] is a martingale, so at
+stopping time T:
+
+```
+E[T] ≈ d² / E[X²]
+```
+
+This underestimates slightly because of overshoot — the walk crosses d, not lands on it.
+
+- Steps ±1/±2/±3 equally likely, "at least 10 away" → `E[X²] = 28/6 = 4.67`,
+  `T ≈ 100/4.67 = 21.4`, overshoot pushes to ~24 `[opt-r08]`
+
 ### D7 · Return times — the slickest formula in the set
 
 For a random walk on a graph, the expected time to return to vertex `v` is `1/π_v`:
@@ -411,6 +476,9 @@ The lookup below is the thing to memorise. Everything else follows from it.
 |---|---|
 | at least one / at least two | complement, `1 − P(none)` |
 | all different | falling factorial / birthday shape |
+| how many ways to split/distribute | stars and bars, `C(n+k−1, k−1)` |
+| all gaps / angles on a circle > d | `(1 − nd)^(n−1)` |
+| no two adjacent / no consecutive | Fibonacci: `a(n) = a(n−1) + a(n−2)` |
 | expected number of … | linearity of indicators |
 | expected value of the sum … until | Wald, `E[N]·E[X]` |
 | until the first … | `1/p` |
@@ -422,6 +490,7 @@ The lookup below is the thing to memorise. Everything else follows from it.
 | the last roll / when it crosses | size-biasing, `k/21`, overshoot |
 | return to its starting point | `2·edges/deg(v)`, `= n` if regular |
 | reach the opposite vertex | `d(n−d)`, divide by the move probability |
+| at least d away (variable steps) | `d² / E[X²]` + overshoot |
 | largest / smallest of n | CDF, `(k/6)ⁿ` |
 | sum is even / odd number of heads | parity → 1/2 (odd n only) |
 | position of the first / last marked item | `(n+1)/(k+1)` |
