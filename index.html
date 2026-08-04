@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Optiver — Practice Games</title>
+<style>
+  :root{
+    --ink:        #1b1b1f;
+    --ink-soft:   #4a4a52;
+    --ink-faint:  #8b8b93;
+    --line:       #e4e4e8;
+    --cell:       #f7f8f9;
+    --cell-hover: #eceef0;
+    --magenta:    #b3117e;
+    --magenta-dk: #8e0d64;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+
+  body{
+    background:#fff;
+    color:var(--ink);
+    font-family:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:40px 20px;
+  }
+
+  .container{
+    max-width:860px;
+    width:100%;
+  }
+
+  .brand{
+    font-size:13px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-bottom:8px;
+  }
+
+  h1{
+    font-size:clamp(28px, 5vw, 42px);
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1.15;
+    margin-bottom:12px;
+  }
+
+  .subtitle{
+    font-size:17px;
+    color:var(--ink-soft);
+    margin-bottom:48px;
+    line-height:1.5;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
+    gap:16px;
+  }
+
+  .card{
+    display:block;
+    background:var(--cell);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:28px 24px;
+    text-decoration:none;
+    color:inherit;
+    transition:border-color .15s, box-shadow .15s, transform .1s;
+    cursor:pointer;
+  }
+
+  .card:hover{
+    border-color:var(--magenta);
+    box-shadow:0 4px 20px rgba(179, 17, 126, .1);
+    transform:translateY(-2px);
+  }
+
+  .card:active{
+    transform:translateY(0);
+  }
+
+  .card-number{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    background:var(--magenta);
+    color:#fff;
+    font-size:15px;
+    font-weight:700;
+    margin-bottom:16px;
+  }
+
+  .card-title{
+    font-size:19px;
+    font-weight:700;
+    margin-bottom:6px;
+    letter-spacing:-.01em;
+  }
+
+  .card-desc{
+    font-size:14px;
+    color:var(--ink-soft);
+    line-height:1.5;
+  }
+
+  .footer{
+    margin-top:48px;
+    text-align:center;
+    font-size:13px;
+    color:var(--ink-faint);
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand">Optiver</div>
+    <h1>Practice Games</h1>
+    <p class="subtitle">Select a game to start practicing.</p>
+
+    <div class="grid">
+      <a class="card" href="1-beat-the-odds/beat-the-odds.html">
+        <div class="card-number">1</div>
+        <div class="card-title">Beat the Odds</div>
+        <div class="card-desc">Estimate probabilities and beat the market odds.</div>
+      </a>
+
+      <a class="card" href="2-number-logic/number-logic.html">
+        <div class="card-number">2</div>
+        <div class="card-title">Number Logic</div>
+        <div class="card-desc">Solve numerical puzzles with logical reasoning.</div>
+      </a>
+
+      <a class="card" href="3-likelihood-list/likelihood-list.html">
+        <div class="card-number">3</div>
+        <div class="card-title">Likelihood List</div>
+        <div class="card-desc">Rank items by their likelihood of occurring.</div>
+      </a>
+
+      <a class="card" href="4-intervals/intervals.html">
+        <div class="card-number">4</div>
+        <div class="card-title">Intervals</div>
+        <div class="card-desc">Estimate confidence intervals for uncertain quantities.</div>
+      </a>
+
+      <a class="card" href="5-orderbooks/index.html">
+        <div class="card-number">5</div>
+        <div class="card-title">Orderbooks</div>
+        <div class="card-desc">Spot arbitrage opportunities across order books.</div>
+      </a>
+
+      <a class="card" href="6-zap-n/the-switch.html">
+        <div class="card-number">6</div>
+        <div class="card-title">Zap-N</div>
+        <div class="card-desc">Fast-paced switching game to test reaction speed.</div>
+      </a>
+    </div>
+
+    <div class="footer">Open any game to begin</div>
+  </div>
+</body>
+</html>

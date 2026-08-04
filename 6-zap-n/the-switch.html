@@ -152,8 +152,8 @@
   </section>
 
   <div id="answers">
-    <button class="ans" id="btn-no"><kbd>←</kbd> NO</button>
-    <button class="ans" id="btn-yes">YES <kbd>→</kbd></button>
+    <button class="ans" id="btn-yes"><kbd>←</kbd> YES</button>
+    <button class="ans" id="btn-no">NO <kbd>→</kbd></button>
   </div>
 
   <!-- Start screen -->
@@ -167,7 +167,7 @@
       <div class="rule"><span class="tag">BOTTOM LIT</span>
         <span>Compare the arrow sets — do both sides of the “|” contain the same number of ◀ and ▶? Ignore its sum.</span></div>
       <div class="rule"><span class="tag">ANSWER</span>
-        <span><b>←</b> No &nbsp;·&nbsp; <b>→</b> Yes &nbsp;·&nbsp; fast <b>and</b> correct scores most — <span id="rule-secs">60</span> seconds on the clock.</span></div>
+        <span><b>←</b> Yes &nbsp;·&nbsp; <b>→</b> No &nbsp;·&nbsp; fast <b>and</b> correct scores most — <span id="rule-secs">60</span> seconds on the clock.</span></div>
     </div>
     <button class="cta" id="btn-start">START</button>
     <div class="hint">or press SPACE</div>
@@ -483,7 +483,7 @@ window.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
     e.preventDefault();
     if (e.repeat) return;
-    const yes = e.key === 'ArrowRight';
+    const yes = e.key === 'ArrowLeft';
     if (S.phase === 'playing') pressVisual(yes ? els.yes : els.no);
     answer(yes);
   } else if (e.key === ' ' || e.key === 'Enter') {

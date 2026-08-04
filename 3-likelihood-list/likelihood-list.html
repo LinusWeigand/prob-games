@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Likelihood List</title>
+<style>
+  :root{
+    --ink:        #1b1b1f;
+    --ink-soft:   #4a4a52;
+    --ink-faint:  #8b8b93;
+    --line:       #e4e4e8;
+    --cell:       #f7f8f9;
+    --cell-hover: #eceef0;
+    --magenta:    #b3117e;
+    --magenta-dk: #8e0d64;
+    --green:      #1a7f4b;
+    --green-bg:   #e6f5ed;
+    --red-bg:     #fce8e8;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+
+  body{
+    margin:0;
+    background:#fff;
+    color:var(--ink);
+    font-family:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  /* ---------------------------------------------------------------- start */
+  #start{
+    min-height:100vh;
+    display:none;
+    flex-direction:column;
+    justify-content:center;
+    padding:0 0 60px;
+  }
+  #start.active{ display:flex; }
+
+  .start-inner{ padding:0 7vw; }
+
+  .brand{
+    font-size:13px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--magenta);
+    font-weight:600;
+    margin-bottom:14px;
+  }
+  h1{
+    margin:0 0 14px;
+    font-size:44px;
+    font-weight:600;
+    letter-spacing:-.01em;
+  }
+  .lede{
+    margin:0 0 40px;
+    font-size:16px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    max-width:640px;
+  }
+  .lede b{ font-weight:600; color:var(--ink); }
+
+  .modes{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    border-top:1px solid var(--line);
+    border-left:1px solid var(--line);
+    max-width:800px;
+  }
+  .mode{
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    background:var(--cell);
+    padding:30px 28px 32px;
+    text-align:left;
+    font:inherit;
+    color:inherit;
+    cursor:pointer;
+    transition:background .12s ease;
+  }
+  .mode:hover{ background:var(--cell-hover); }
+  .mode-title{ font-size:20px; font-weight:600; margin-bottom:8px; }
+  .mode-sub{ font-size:14px; line-height:1.55; color:var(--ink-soft); }
+
+  .dbline{
+    margin-top:26px;
+    font-size:13px;
+    color:var(--ink-faint);
+  }
+
+  /* ----------------------------------------------------------------- quiz */
+  #quiz{ min-height:100vh; display:none; flex-direction:column; }
+  #quiz.active{ display:flex; }
+
+  .topbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    padding:22px 26px 0;
+    font-size:12.5px;
+    color:var(--ink-faint);
+  }
+  .counter{ color:var(--ink); font-weight:400; }
+  .timer.low{ color:var(--magenta); font-weight:600; }
+
+  .stem{
+    padding:28px 7vw 0;
+    flex:0 0 auto;
+  }
+  .qtext{
+    font-size:18px;
+    line-height:1.55;
+    font-weight:500;
+    max-width:90%;
+    margin:0;
+    white-space:pre-wrap;
+  }
+
+  /* visual area */
+  .visual-area{
+    padding:20px 7vw;
+    overflow-x:auto;
+  }
+
+  /* data tables */
+  .data-table{
+    border-collapse:collapse;
+    font-size:13px;
+    margin:0 auto;
+  }
+  .data-table th{
+    background:var(--cell);
+    font-weight:600;
+    padding:8px 14px;
+    border:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .data-table td{
+    padding:6px 14px;
+    border:1px solid var(--line);
+    text-align:center;
+    white-space:nowrap;
+  }
+  .data-table tr:nth-child(even) td{ background:#fafafa; }
+
+  /* charts */
+  .chart-container{
+    display:flex;
+    justify-content:center;
+  }
+  .chart-container svg{
+    max-width:100%;
+    height:auto;
+  }
+
+  /* question images */
+  .visual-img{
+    display:block;
+    max-width:100%;
+    height:auto;
+    margin:0 auto;
+    border-radius:4px;
+  }
+
+  /* ranking area */
+  .rank-label{
+    padding:10px 7vw 0;
+    font-size:12px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    font-weight:600;
+  }
+
+  .rank-area{
+    padding:8px 7vw 0;
+    max-width:800px;
+  }
+
+  .rank-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--cell);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:14px 18px;
+    margin-bottom:8px;
+    cursor:grab;
+    user-select:none;
+    transition:background .1s ease, box-shadow .15s ease, transform .15s ease;
+    font-size:15px;
+    line-height:1.5;
+  }
+  .rank-item:active{ cursor:grabbing; }
+  .rank-item.dragging{
+    opacity:.5;
+    background:var(--cell-hover);
+  }
+  .rank-item.drag-over{
+    box-shadow:0 -3px 0 0 var(--magenta);
+  }
+
+  .rank-handle{
+    color:var(--ink-faint);
+    font-size:18px;
+    flex-shrink:0;
+    cursor:grab;
+  }
+
+  .rank-num{
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:var(--magenta);
+    color:#fff;
+    font-size:12px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+
+  .rank-text{ flex:1; }
+
+  .rank-arrows{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    flex-shrink:0;
+  }
+  .rank-arrow{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:3px;
+    width:28px;
+    height:22px;
+    cursor:pointer;
+    font-size:12px;
+    color:var(--ink-soft);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .1s ease;
+  }
+  .rank-arrow:hover{ background:var(--cell-hover); }
+
+  /* correct/wrong highlights */
+  .rank-item.correct{
+    background:var(--green-bg);
+    border-color:var(--green);
+  }
+  .rank-item.wrong{
+    background:var(--red-bg);
+    border-color:var(--magenta);
+  }
+  .rank-item.locked{
+    cursor:default;
+    pointer-events:none;
+  }
+
+  .actions{
+    display:flex;
+    justify-content:flex-end;
+    padding:18px 26px 30px;
+    gap:12px;
+  }
+  .submit{
+    background:var(--magenta);
+    color:#fff;
+    border:0;
+    border-radius:3px;
+    font:inherit;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 20px;
+    cursor:pointer;
+    transition:background .12s ease, opacity .12s ease;
+  }
+  .submit:hover{ background:var(--magenta-dk); }
+  .skip-btn{
+    background:var(--cell);
+    color:var(--ink-soft);
+    border:1px solid var(--line);
+    border-radius:3px;
+    font:inherit;
+    font-size:13px;
+    font-weight:500;
+    padding:9px 20px;
+    cursor:pointer;
+    transition:background .12s ease;
+  }
+  .skip-btn:hover{ background:var(--cell-hover); }
+
+  /* breakdown */
+  .breakdown-body{ padding:0 7vw; }
+
+  .breakdown{ display:none; }
+  .breakdown.visible{ display:block; }
+
+  .verdict{
+    font-size:20px;
+    font-weight:700;
+    padding:18px 0 14px;
+  }
+  .verdict.ok{ color:var(--green); }
+  .verdict.no{ color:var(--magenta); }
+  .verdict.skip-v{ color:var(--ink-faint); }
+
+  .breakdown-card{
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:22px 0 26px;
+    max-width:700px;
+  }
+
+  .bd-section{ margin-bottom:16px; }
+  .bd-section:last-child{ margin-bottom:0; }
+  .bd-label{
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  .bd-category{
+    font-size:13px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--magenta);
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .bd-technique{
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .bd-solution{
+    font-size:14px;
+    line-height:1.65;
+    color:var(--ink);
+    margin:0;
+    white-space:pre-wrap;
+  }
+  .bd-correct-order{
+    font-size:14px;
+    line-height:1.65;
+    color:var(--ink);
+  }
+  .bd-correct-order ol{
+    margin:4px 0 0;
+    padding-left:20px;
+  }
+  .bd-correct-order li{ margin-bottom:4px; }
+
+  .bd-next{
+    border:0;
+    border-radius:3px;
+    font:inherit;
+    font-size:14px;
+    font-weight:600;
+    padding:11px 36px;
+    cursor:pointer;
+    background:var(--magenta);
+    color:#fff;
+    transition:background .12s ease;
+    margin-top:18px;
+  }
+  .bd-next:hover{ background:var(--magenta-dk); }
+
+  /* ---------------------------------------------------------- results */
+  #results{ padding:46px 7vw 80px; }
+
+  .score{
+    font-size:40px;
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  .score-sub{ font-size:15px; color:var(--ink-soft); margin:0 0 34px; }
+
+  .review{ border-top:1px solid var(--line); max-width:1000px; }
+  .rev-row{
+    border-bottom:1px solid var(--line);
+    padding:18px 0 20px;
+    display:grid;
+    grid-template-columns:34px 1fr;
+    gap:14px;
+  }
+  .mark{
+    font-size:15px;
+    line-height:1.5;
+    font-weight:700;
+  }
+  .mark.ok{ color:var(--green); }
+  .mark.no{ color:var(--magenta); }
+  .rq{ font-size:15px; line-height:1.55; font-weight:600; margin:0 0 6px; white-space:pre-wrap; }
+  .ra{ font-size:13.5px; line-height:1.6; color:var(--ink-soft); margin:0; }
+  .note{ font-size:13px; color:var(--ink-faint); margin:6px 0 0; line-height:1.6; white-space:pre-wrap; }
+
+  .again{ margin-top:34px; }
+
+  @media (max-width:820px){
+    .qtext{ max-width:100%; font-size:16px; }
+    .modes{ grid-template-columns:1fr; }
+    h1{ font-size:32px; }
+    .rank-area{ max-width:100%; }
+    .data-table{ font-size:11px; }
+    .data-table th, .data-table td{ padding:4px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ START ==== -->
+<section id="start" class="screen active">
+  <div class="start-inner">
+    <div class="brand">Optiver</div>
+    <h1>Likelihood List</h1>
+    <p class="lede">
+      Rank three statements from <b>most likely</b> to <b>least likely</b>.
+      Many questions include a table, chart, or diagram &mdash; use the data
+      to estimate relative probabilities.
+    </p>
+
+    <div class="modes">
+      <button class="mode" data-mode="timed">
+        <div class="mode-title">All questions &middot; timed</div>
+        <div class="mode-sub">
+          Every question, shuffled.<br>
+          1:30 on the clock for each one.<br>
+          After submitting (or time runs out), the solving framework and solution are shown.
+        </div>
+      </button>
+      <button class="mode" data-mode="untimed">
+        <div class="mode-title">All questions &middot; untimed</div>
+        <div class="mode-sub">
+          Every question, shuffled. No clock.<br>
+          After submitting, the solving framework and solution are shown.
+        </div>
+      </button>
+    </div>
+
+    <p class="dbline" id="dbline"></p>
+  </div>
+</section>
+
+<!-- ============================================================= QUIZ ==== -->
+<section id="quiz" class="screen">
+  <div class="topbar">
+    <div class="counter" id="counter">1 / 13</div>
+    <div class="timer" id="timer">1:30</div>
+  </div>
+
+  <div class="stem">
+    <p class="qtext" id="qtext"></p>
+  </div>
+
+  <div class="visual-area" id="visual-area"></div>
+
+  <div class="rank-label">MOST LIKELY</div>
+  <div class="rank-area" id="rank-area"></div>
+  <div class="rank-label" style="color:var(--ink-faint);opacity:.6;padding-bottom:4px">LEAST LIKELY</div>
+
+  <div class="actions" id="quiz-actions">
+    <button class="skip-btn" id="skip-btn">Skip</button>
+    <button class="submit" id="submit-btn">Submit</button>
+  </div>
+
+  <div class="breakdown-body">
+    <div class="breakdown" id="breakdown">
+      <div class="verdict" id="verdict"></div>
+      <div class="breakdown-card">
+        <div class="bd-section">
+          <div class="bd-label">Correct order</div>
+          <div class="bd-correct-order" id="bd-correct-order"></div>
+        </div>
+        <div class="bd-section">
+          <div class="bd-label">Category</div>
+          <div class="bd-category" id="bd-category"></div>
+        </div>
+        <div class="bd-section">
+          <div class="bd-label">Technique</div>
+          <div class="bd-technique" id="bd-technique"></div>
+        </div>
+        <div class="bd-section">
+          <div class="bd-label">Solution</div>
+          <p class="bd-solution" id="bd-solution"></p>
+        </div>
+      </div>
+      <button class="bd-next" id="bd-next">Next</button>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================== RESULTS ==== -->
+<section id="results" class="screen">
+  <p class="score" id="score"></p>
+  <p class="score-sub" id="scoreSub"></p>
+  <div class="review" id="review"></div>
+  <div class="again">
+    <button class="submit" id="restart">Back to start</button>
+  </div>
+</section>
+
+<script src="questions.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var SECONDS_PER_Q = 90;
+
+  var el = function (id) { return document.getElementById(id); };
+
+  var state = {
+    mode: "timed",
+    deck: [],
+    index: 0,
+    order: [],
+    answers: [],
+    timer: null,
+    left: 0,
+    locked: false
+  };
+
+  function shuffle(a) {
+    var arr = a.slice();
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function mmss(s) {
+    var m = Math.floor(s / 60);
+    var r = s % 60;
+    return m + ":" + (r < 10 ? "0" : "") + r;
+  }
+
+  function show(id) {
+    ["start", "quiz", "results"].forEach(function (s) {
+      el(s).classList.toggle("active", s === id);
+    });
+  }
+
+  // ----------------------------------------------------------- start
+  el("dbline").textContent = QUESTIONS.length + " questions from the Optiver assessment.";
+
+  Array.prototype.forEach.call(document.querySelectorAll(".mode"), function (b) {
+    b.addEventListener("click", function () { begin(b.dataset.mode); });
+  });
+
+  function begin(mode) {
+    state.mode = mode;
+    state.deck = shuffle(QUESTIONS);
+    state.index = 0;
+    state.answers = [];
+    show("quiz");
+    render();
+  }
+
+  // ----------------------------------------------------------- render
+  function render() {
+    var q = state.deck[state.index];
+    state.locked = false;
+    state.order = shuffle([0, 1, 2]);
+
+    el("counter").textContent = (state.index + 1) + " / " + state.deck.length;
+    el("qtext").textContent = q.text;
+
+    renderVisual(q);
+    renderRankItems(q);
+
+    el("breakdown").classList.remove("visible");
+    el("quiz-actions").style.display = "";
+
+    startTimer();
+    window.scrollTo(0, 0);
+  }
+
+  // ----------------------------------------------------------- visuals
+  function renderVisual(q) {
+    var area = el("visual-area");
+    area.innerHTML = "";
+
+    if (q.visualType === "table" && q.visualData) {
+      area.appendChild(buildTable(q.visualData));
+    } else if (q.visualType === "image" && q.imageSrc) {
+      var img = document.createElement("img");
+      img.className = "visual-img";
+      img.src = "data/photos/cropped/" + q.imageSrc;
+      img.alt = "Question visual";
+      area.appendChild(img);
+    }
+  }
+
+  function buildTable(d) {
+    var t = document.createElement("table");
+    t.className = "data-table";
+    var thead = document.createElement("thead");
+    var hr = document.createElement("tr");
+    d.headers.forEach(function (h) {
+      var th = document.createElement("th");
+      th.textContent = h;
+      hr.appendChild(th);
+    });
+    thead.appendChild(hr);
+    t.appendChild(thead);
+
+    var tbody = document.createElement("tbody");
+    d.rows.forEach(function (row) {
+      var tr = document.createElement("tr");
+      row.forEach(function (cell) {
+        var td = document.createElement("td");
+        td.textContent = cell;
+        if (cell === "?" || cell === "B" || cell === "C" || cell === "D" || cell === "E" || cell === "F" || cell === "A") {
+          if (cell.length === 1 && cell.match(/^[A-F?]$/)) {
+            td.style.fontWeight = "700";
+            td.style.color = "var(--magenta)";
+          }
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody);
+    return t;
+  }
+
+  // ----------------------------------------------------------- rank items
+  function renderRankItems(q) {
+    var area = el("rank-area");
+    area.innerHTML = "";
+
+    state.order.forEach(function (origIdx, pos) {
+      var item = document.createElement("div");
+      item.className = "rank-item";
+      item.draggable = true;
+      item.dataset.pos = pos;
+
+      var num = document.createElement("div");
+      num.className = "rank-num";
+      num.textContent = pos + 1;
+
+      var handle = document.createElement("div");
+      handle.className = "rank-handle";
+      handle.textContent = "≡";
+
+      var text = document.createElement("div");
+      text.className = "rank-text";
+      text.textContent = q.statements[origIdx];
+
+      var arrows = document.createElement("div");
+      arrows.className = "rank-arrows";
+      var up = document.createElement("button");
+      up.className = "rank-arrow";
+      up.textContent = "▲";
+      up.addEventListener("click", function (e) { e.stopPropagation(); moveItem(parseInt(item.dataset.pos), -1); });
+      var down = document.createElement("button");
+      down.className = "rank-arrow";
+      down.textContent = "▼";
+      down.addEventListener("click", function (e) { e.stopPropagation(); moveItem(parseInt(item.dataset.pos), 1); });
+      arrows.appendChild(up);
+      arrows.appendChild(down);
+
+      item.appendChild(handle);
+      item.appendChild(num);
+      item.appendChild(text);
+      item.appendChild(arrows);
+      area.appendChild(item);
+
+      // drag events
+      item.addEventListener("dragstart", function (e) {
+        if (state.locked) { e.preventDefault(); return; }
+        item.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", item.dataset.pos);
+      });
+      item.addEventListener("dragend", function () {
+        item.classList.remove("dragging");
+        clearDragOver();
+      });
+      item.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        clearDragOver();
+        item.classList.add("drag-over");
+      });
+      item.addEventListener("drop", function (e) {
+        e.preventDefault();
+        clearDragOver();
+        var fromPos = parseInt(e.dataTransfer.getData("text/plain"));
+        var toPos = parseInt(item.dataset.pos);
+        if (fromPos !== toPos) {
+          swapItems(fromPos, toPos);
+        }
+      });
+    });
+  }
+
+  function clearDragOver() {
+    Array.prototype.forEach.call(document.querySelectorAll(".rank-item"), function (el) {
+      el.classList.remove("drag-over");
+    });
+  }
+
+  function moveItem(pos, dir) {
+    if (state.locked) return;
+    var newPos = pos + dir;
+    if (newPos < 0 || newPos > 2) return;
+    swapItems(pos, newPos);
+  }
+
+  function swapItems(fromPos, toPos) {
+    var tmp = state.order[fromPos];
+    state.order[fromPos] = state.order[toPos];
+    state.order[toPos] = tmp;
+    updateRankDisplay();
+  }
+
+  function updateRankDisplay() {
+    var q = state.deck[state.index];
+    var items = el("rank-area").children;
+    for (var i = 0; i < items.length; i++) {
+      items[i].dataset.pos = i;
+      items[i].querySelector(".rank-num").textContent = i + 1;
+      items[i].querySelector(".rank-text").textContent = q.statements[state.order[i]];
+    }
+  }
+
+  // ----------------------------------------------------------- timer
+  function startTimer() {
+    clearInterval(state.timer);
+    var t = el("timer");
+
+    if (state.mode === "untimed") {
+      t.textContent = "";
+      t.classList.remove("low");
+      return;
+    }
+
+    state.left = SECONDS_PER_Q;
+    paintTimer();
+    state.timer = setInterval(function () {
+      state.left--;
+      paintTimer();
+      if (state.left <= 0) {
+        clearInterval(state.timer);
+        submitAnswer(true);
+      }
+    }, 1000);
+  }
+
+  function paintTimer() {
+    var t = el("timer");
+    t.textContent = mmss(Math.max(0, state.left));
+    t.classList.toggle("low", state.left <= 15);
+  }
+
+  // ----------------------------------------------------------- submit
+  el("submit-btn").addEventListener("click", function () { submitAnswer(false); });
+  el("skip-btn").addEventListener("click", function () { submitAnswer(true); });
+
+  function submitAnswer(skipped) {
+    if (state.locked) return;
+    state.locked = true;
+    clearInterval(state.timer);
+
+    var q = state.deck[state.index];
+    var correct = !skipped && state.order[0] === 0 && state.order[1] === 1 && state.order[2] === 2;
+
+    state.answers.push({
+      q: q,
+      userOrder: state.order.slice(),
+      correct: correct,
+      skipped: skipped
+    });
+
+    el("quiz-actions").style.display = "none";
+
+    // highlight items
+    var items = el("rank-area").children;
+    for (var i = 0; i < items.length; i++) {
+      items[i].classList.add("locked");
+      if (!skipped) {
+        items[i].classList.add(state.order[i] === i ? "correct" : "wrong");
+      }
+    }
+
+    // show breakdown
+    var verdict = el("verdict");
+    if (skipped) {
+      verdict.textContent = "Skipped";
+      verdict.className = "verdict skip-v";
+    } else if (correct) {
+      verdict.textContent = "Correct!";
+      verdict.className = "verdict ok";
+    } else {
+      verdict.textContent = "Incorrect";
+      verdict.className = "verdict no";
+    }
+
+    var ol = document.createElement("ol");
+    q.statements.forEach(function (s) {
+      var li = document.createElement("li");
+      li.textContent = s;
+      ol.appendChild(li);
+    });
+    var correctDiv = el("bd-correct-order");
+    correctDiv.innerHTML = "";
+    correctDiv.appendChild(ol);
+
+    el("bd-category").textContent = q.category;
+    el("bd-technique").textContent = q.technique;
+    el("bd-solution").textContent = q.note;
+
+    el("breakdown").classList.add("visible");
+  }
+
+  el("bd-next").addEventListener("click", nextQuestion);
+
+  function nextQuestion() {
+    state.index++;
+    if (state.index >= state.deck.length) finish();
+    else render();
+  }
+
+  // keyboard
+  document.addEventListener("keydown", function (e) {
+    if (!el("quiz").classList.contains("active")) return;
+    if (state.locked) {
+      if (e.key === "Enter" || e.key === " " || e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        nextQuestion();
+      }
+    }
+  });
+
+  // ----------------------------------------------------------- results
+  function finish() {
+    var right = state.answers.filter(function (a) { return a.correct; }).length;
+    var total = state.answers.length;
+
+    el("score").textContent = right + " / " + total;
+    var label = state.mode === "timed" ? "timed, 1:30 per question" : "untimed";
+    el("scoreSub").textContent = Math.round((right / total) * 100) + "% correct — " + label;
+
+    var rev = el("review");
+    rev.innerHTML = "";
+    state.answers.forEach(function (a) {
+      var row = document.createElement("div");
+      row.className = "rev-row";
+
+      var mark = document.createElement("div");
+      mark.className = "mark " + (a.correct ? "ok" : "no");
+      mark.textContent = a.correct ? "✓" : "✗";
+
+      var body = document.createElement("div");
+
+      var qp = document.createElement("p");
+      qp.className = "rq";
+      qp.textContent = a.q.text.substring(0, 120) + (a.q.text.length > 120 ? "..." : "");
+
+      var ap = document.createElement("p");
+      ap.className = "ra";
+      if (a.skipped) {
+        ap.textContent = "Skipped";
+      } else {
+        ap.textContent = "Your order: " +
+          a.userOrder.map(function (idx) { return (idx + 1) + ". " + a.q.statements[idx]; }).join("  |  ");
+      }
+
+      var np = document.createElement("p");
+      np.className = "note";
+      np.textContent = "Correct: " + a.q.statements.map(function (s, i) { return (i + 1) + ". " + s; }).join("  |  ");
+
+      body.appendChild(qp);
+      body.appendChild(ap);
+      body.appendChild(np);
+      row.appendChild(mark);
+      row.appendChild(body);
+      rev.appendChild(row);
+    });
+
+    show("results");
+    window.scrollTo(0, 0);
+  }
+
+  el("restart").addEventListener("click", function () {
+    show("start");
+    window.scrollTo(0, 0);
+  });
+
+})();
+</script>
+</body>
+</html>

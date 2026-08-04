@@ -22,7 +22,7 @@ var QUESTIONS_EXTRA = [
     options: ["15", "12", "9", "21"],
     answer: 0,
     pattern: "alternating-ops",
-    note: "Alternating ×3 and ÷2. 2×3=6, 6÷2=3, 3×3=9, 9÷2=4.5→6 (adjust), 6×3=18, 18÷2=... Actually: ×3, ÷2 cycle. But better: alternating ×3 and −3. Let me recheck. 2→6(×3), 6→3(÷2), 3→9(×3), 9→6(−3), 6→18(×3), 18→15(−3). Answer: 15."
+    note: "Alternating ×3 and −3. 2×3=6, 6−3=3, 3×3=9, 9−3=6, 6×3=18, 18−3=15."
   },
   {
     id: "seq-g03",
@@ -128,11 +128,11 @@ var QUESTIONS_EXTRA = [
   // --- CYCLIC OPERATIONS ---
   {
     id: "seq-g15",
-    sequence: ["2", "6", "3", "1", "5", "15", "?"],
-    options: ["12", "10", "7½", "18"],
-    answer: 2,
+    sequence: ["4", "8", "3", "6", "12", "7", "?"],
+    options: ["10", "15", "9", "14"],
+    answer: 0,
     pattern: "cyclic-ops",
-    note: "Cycle of 3 operations: ×3, ÷2, −2. 2×3=6, 6÷2=3, 3−2=1, 1×3=3→5(adjust). Actually: +3, ÷2, −2 cycle. Recheck: 2+3→... Let me use ×3, ÷2, ÷3: 2×3=6, 6÷2=3, 3÷3=1, 1+4=5... Hmm. Better pattern: ×3, ÷2 repeating: 2×3=6, 6÷2=3, 3÷3=1, 1×5=5, 5×3=15, 15÷2=7½."
+    note: "3-cycle: ×2, −5, +3. 4×2=8, 8−5=3, 3+3=6, 6×2=12, 12−5=7, 7+3=10."
   },
   {
     id: "seq-g16",
@@ -140,7 +140,7 @@ var QUESTIONS_EXTRA = [
     options: ["6", "9", "8", "15"],
     answer: 0,
     pattern: "cyclic-ops",
-    note: "Cycle of 3 operations: ×2, ×3, ÷2. 1×2=2, 2×3=6, 6÷2=3, 3×2=... Wait: +1, ×3, ÷2. 1+1=2, 2×3=6, 6÷2=3, 3+1=4, 4×3=12, 12÷2=6."
+    note: "3-cycle: +1, ×3, ÷2. 1+1=2, 2×3=6, 6÷2=3, 3+1=4, 4×3=12, 12÷2=6."
   },
   {
     id: "seq-g17",
@@ -204,11 +204,11 @@ var QUESTIONS_EXTRA = [
   },
   {
     id: "seq-g24",
-    sequence: ["3", "5", "16", "33", "?"],
-    options: ["100", "88", "110", "95"],
+    sequence: ["1", "2", "2", "4", "8", "32", "?"],
+    options: ["256", "128", "64", "320"],
     answer: 0,
     pattern: "recursive-product",
-    note: "a(n) = a(n−1) × 2 + a(n−2). 5×2+3=13→... Actually: a(n) = a(n-1)×a(n-2)+1: 3×5+1=16, 5×16-47=33... Hmm. Better: differences are 2, 11, 17 → primes? No. Let me use: 3, 5, 3×5+1=16, 5+16×2=37... Adjust: 3, 5, 16=3+5+8, 33=5+16+12... Not clean. Use: 3×5+1=16, 16×2+1=33, 33×3+1=100."
+    note: "a(n) = a(n−1) × a(n−2). 1×2=2, 2×2=4, 2×4=8, 4×8=32, 8×32=256."
   },
 
   // --- FAMOUS DIFFERENCE PATTERNS ---
@@ -404,11 +404,11 @@ var QUESTIONS_EXTRA = [
   },
   {
     id: "seq-g47",
-    sequence: ["3", "9", "6", "2", "8", "24", "?"],
-    options: ["21", "16", "18", "12"],
+    sequence: ["1", "2", "7", "4", "8", "13", "?"],
+    options: ["10", "15", "8", "12"],
     answer: 0,
     pattern: "cyclic-ops",
-    note: "Cycle of 3 operations: ×3, −3, ÷3... Actually: ×3, ÷(3/2), ÷3. 3×3=9, 9×⅔=6, 6÷3=2, 2×4... Adjust: ×3, −3, ÷3: 3×3=9, 9−3=6, 6÷3=2, 2+6=8, 8×3=24, 24−3=21."
+    note: "3-cycle: ×2, +5, −3. 1×2=2, 2+5=7, 7−3=4, 4×2=8, 8+5=13, 13−3=10."
   },
 
   // --- MORE LINEAR RECURRENCE ---

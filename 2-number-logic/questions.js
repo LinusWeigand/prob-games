@@ -82,7 +82,7 @@ var QUESTIONS = [
     options: ["−22", "9", "58", "17"],
     answer: 0,
     pattern: "geometric-diff",
-    note: "Differences multiply by −2: −1, +2, −4, +8, −16, −32. Next: 10−32=−22."
+    note: "Differences: −1, +2, −4, +8, −16. Absolute values double, signs alternate. Strictly, the next difference should be +32 (giving 42), but 42 is not among the options. The intended answer −22 treats the next difference as −32."
   },
   {
     id: "seq-p10",
@@ -122,7 +122,7 @@ var QUESTIONS = [
     options: ["176", "188", "170⅔", "124"],
     answer: 0,
     pattern: "alternating-ops",
-    note: "Alternating multiply-add pattern: ×2+4, +8, ×2+12, +4, ×2−8. The add steps halve: +8, +4. Next multiply step: 88×2=176."
+    note: "Differences: 16, 8, 48, 4, 80. Grouped in pairs: large jumps (16, 48, 80) increase by 32; small jumps (8, 4) halve. Next small jump is 8, so 168+8=176."
   },
   {
     id: "seq-p15",
@@ -130,7 +130,7 @@ var QUESTIONS = [
     options: ["137", "133", "129", "142"],
     answer: 2,
     pattern: "complex-ratio",
-    note: "Consecutive ratios (½, 3/2, 13/6, 32/13, 11/4) converge toward 3. Differences: −2, 1, 3.5, 9.5, 28. Next difference ≈ 85 → 44+85=129."
+    note: "Differences: −2, 1, 3.5, 9.5, 28. Ratios of consecutive differences approach 3 (×−0.5, ×3.5, ×2.71, ×2.95). Next difference ≈ 28×3 = 84, so 44+85 ≈ 129."
   },
   {
     id: "seq-p16",
@@ -170,7 +170,7 @@ var QUESTIONS = [
     options: ["32", "36", "24", "42⅔", "21⅓"],
     answer: 3,
     pattern: "cyclic-ops",
-    note: "Repeating cycle of 3 operations: ÷3, ×6, ×⅔. 18÷3=6, 6×6=36, 36×⅔=24, 24÷3=8, 8×6=48→64 (adjust: 8×8=64), 64×⅔=42⅔."
+    note: "Apparent 3-cycle: ÷3, ×6, ×⅔. Works for first group (18÷3=6, 6×6=36, 36×⅔=24) and start of second (24÷3=8). The step 8→64 breaks the cycle (8×6=48, not 64). If we continue the ×⅔ step: 64×⅔=42⅔."
   },
   {
     id: "seq-p21",

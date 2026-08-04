@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intervals</title>
+<style>
+  :root{
+    --ink:        #1b1b1f;
+    --ink-soft:   #4a4a52;
+    --ink-faint:  #8b8b93;
+    --line:       #e4e4e8;
+    --cell:       #f7f8f9;
+    --cell-hover: #eceef0;
+    --magenta:    #b3117e;
+    --magenta-dk: #8e0d64;
+    --green:      #1a7f4b;
+    --green-bg:   #e6f5ed;
+    --red-bg:     #fce8e8;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+
+  body{
+    margin:0;
+    background:#fff;
+    color:var(--ink);
+    font-family:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  /* ---------------------------------------------------------------- start */
+  #start{
+    min-height:100vh;
+    display:none;
+    flex-direction:column;
+    justify-content:center;
+    padding:0 0 60px;
+  }
+  #start.active{ display:flex; }
+
+  .start-inner{ padding:0 7vw; }
+
+  .brand{
+    font-size:13px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--magenta);
+    font-weight:600;
+    margin-bottom:14px;
+  }
+  h1{
+    margin:0 0 14px;
+    font-size:44px;
+    font-weight:600;
+    letter-spacing:-.01em;
+  }
+  .lede{
+    margin:0 0 40px;
+    font-size:16px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    max-width:640px;
+  }
+  .lede b{ font-weight:600; color:var(--ink); }
+
+  .modes{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    border-top:1px solid var(--line);
+    border-left:1px solid var(--line);
+    max-width:800px;
+  }
+  .mode{
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    background:var(--cell);
+    padding:30px 28px 32px;
+    text-align:left;
+    font:inherit;
+    color:inherit;
+    cursor:pointer;
+    transition:background .12s ease;
+  }
+  .mode:hover{ background:var(--cell-hover); }
+  .mode-title{ font-size:20px; font-weight:600; margin-bottom:8px; }
+  .mode-sub{ font-size:14px; line-height:1.55; color:var(--ink-soft); }
+
+  .dbline{
+    margin-top:26px;
+    font-size:13px;
+    color:var(--ink-faint);
+  }
+
+  /* ----------------------------------------------------------------- quiz */
+  #quiz{ min-height:100vh; display:none; flex-direction:column; }
+  #quiz.active{ display:flex; }
+
+  .topbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    padding:22px 26px 0;
+    font-size:12.5px;
+    color:var(--ink-faint);
+  }
+  .counter{ color:var(--ink); font-weight:400; }
+  .timer.low{ color:var(--magenta); font-weight:600; }
+
+  .stem{
+    padding:28px 7vw 0;
+    flex:0 0 auto;
+  }
+  .qtext{
+    font-size:18px;
+    line-height:1.55;
+    font-weight:500;
+    max-width:90%;
+    margin:0;
+    white-space:pre-wrap;
+  }
+
+  /* visual area */
+  .visual-area{
+    padding:20px 7vw;
+    overflow-x:auto;
+  }
+
+  .visual-img{
+    display:block;
+    max-width:100%;
+    height:auto;
+    margin:0 auto;
+    border-radius:4px;
+  }
+
+  /* interval area */
+  .interval-area{
+    padding:10px 7vw 0;
+    display:flex;
+    align-items:flex-start;
+    gap:32px;
+    flex-wrap:wrap;
+  }
+
+  .bound-group{ display:flex; flex-direction:column; align-items:center; }
+
+  .bound-label{
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+
+  .bound-control{
+    display:flex;
+    align-items:center;
+    background:var(--cell);
+    border:1px solid var(--line);
+    border-radius:999px;
+    overflow:hidden;
+    height:46px;
+  }
+
+  .bound-btn{
+    background:none;
+    border:none;
+    width:46px;
+    height:46px;
+    font-size:20px;
+    font-weight:500;
+    color:var(--ink-soft);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .1s ease;
+    user-select:none;
+    flex-shrink:0;
+  }
+  .bound-btn:hover{ background:var(--cell-hover); }
+  .bound-btn:active{ background:var(--line); }
+
+  .bound-input{
+    width:80px;
+    text-align:center;
+    border:none;
+    background:transparent;
+    font:inherit;
+    font-size:18px;
+    font-weight:600;
+    color:var(--ink);
+    outline:none;
+    -moz-appearance:textfield;
+  }
+  .bound-input::-webkit-outer-spin-button,
+  .bound-input::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+
+  .actions{
+    display:flex;
+    justify-content:flex-end;
+    padding:24px 26px 30px;
+    gap:12px;
+  }
+  .submit{
+    background:var(--magenta);
+    color:#fff;
+    border:0;
+    border-radius:3px;
+    font:inherit;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 20px;
+    cursor:pointer;
+    transition:background .12s ease, opacity .12s ease;
+  }
+  .submit:hover{ background:var(--magenta-dk); }
+  .skip-btn{
+    background:var(--cell);
+    color:var(--ink-soft);
+    border:1px solid var(--line);
+    border-radius:3px;
+    font:inherit;
+    font-size:13px;
+    font-weight:500;
+    padding:9px 20px;
+    cursor:pointer;
+    transition:background .12s ease;
+  }
+  .skip-btn:hover{ background:var(--cell-hover); }
+
+  /* breakdown */
+  .breakdown-body{ padding:0 7vw; }
+
+  .breakdown{ display:none; }
+  .breakdown.visible{ display:block; }
+
+  .verdict{
+    font-size:20px;
+    font-weight:700;
+    padding:18px 0 14px;
+  }
+  .verdict.ok{ color:var(--green); }
+  .verdict.no{ color:var(--magenta); }
+  .verdict.skip-v{ color:var(--ink-faint); }
+
+  .breakdown-card{
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:22px 0 26px;
+    max-width:700px;
+  }
+
+  .bd-section{ margin-bottom:16px; }
+  .bd-section:last-child{ margin-bottom:0; }
+  .bd-label{
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  .bd-category{
+    font-size:13px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--magenta);
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .bd-technique{
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .bd-solution{
+    font-size:14px;
+    line-height:1.65;
+    color:var(--ink);
+    margin:0;
+    white-space:pre-wrap;
+  }
+  .bd-answer-line{
+    font-size:16px;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .bd-interval-line{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+
+  .bd-next{
+    border:0;
+    border-radius:3px;
+    font:inherit;
+    font-size:14px;
+    font-weight:600;
+    padding:11px 36px;
+    cursor:pointer;
+    background:var(--magenta);
+    color:#fff;
+    transition:background .12s ease;
+    margin-top:18px;
+  }
+  .bd-next:hover{ background:var(--magenta-dk); }
+
+  /* ---------------------------------------------------------- results */
+  #results{ padding:46px 7vw 80px; }
+
+  .score{
+    font-size:40px;
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  .score-sub{ font-size:15px; color:var(--ink-soft); margin:0 0 34px; }
+
+  .review{ border-top:1px solid var(--line); max-width:1000px; }
+  .rev-row{
+    border-bottom:1px solid var(--line);
+    padding:18px 0 20px;
+    display:grid;
+    grid-template-columns:34px 1fr;
+    gap:14px;
+  }
+  .mark{
+    font-size:15px;
+    line-height:1.5;
+    font-weight:700;
+  }
+  .mark.ok{ color:var(--green); }
+  .mark.no{ color:var(--magenta); }
+  .rq{ font-size:15px; line-height:1.55; font-weight:600; margin:0 0 6px; white-space:pre-wrap; }
+  .ra{ font-size:13.5px; line-height:1.6; color:var(--ink-soft); margin:0; }
+  .note{ font-size:13px; color:var(--ink-faint); margin:6px 0 0; line-height:1.6; white-space:pre-wrap; }
+
+  .again{ margin-top:34px; }
+
+  @media (max-width:820px){
+    .qtext{ max-width:100%; font-size:16px; }
+    .modes{ grid-template-columns:1fr; }
+    h1{ font-size:32px; }
+    .interval-area{ gap:20px; }
+    .bound-input{ width:64px; font-size:16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ START ==== -->
+<section id="start" class="screen active">
+  <div class="start-inner">
+    <div class="brand">Optiver</div>
+    <h1>Intervals</h1>
+    <p class="lede">
+      For each question, provide a <b>Lower Bound</b> and <b>Upper Bound</b>
+      for the answer. Narrower intervals score better &mdash; but only if the
+      true answer falls within your range. Use the <b>+/&minus;</b> buttons or
+      type directly.
+    </p>
+
+    <div class="modes">
+      <button class="mode" data-mode="timed">
+        <div class="mode-title">All questions &middot; timed</div>
+        <div class="mode-sub">
+          Every question, shuffled.<br>
+          0:45 on the clock for each one.<br>
+          After submitting (or time runs out), the solving framework and solution are shown.
+        </div>
+      </button>
+      <button class="mode" data-mode="untimed">
+        <div class="mode-title">All questions &middot; untimed</div>
+        <div class="mode-sub">
+          Every question, shuffled. No clock.<br>
+          After submitting, the solving framework and solution are shown.
+        </div>
+      </button>
+    </div>
+
+    <p class="dbline" id="dbline"></p>
+  </div>
+</section>
+
+<!-- ============================================================= QUIZ ==== -->
+<section id="quiz" class="screen">
+  <div class="topbar">
+    <div class="counter" id="counter">1 / 16</div>
+    <div class="timer" id="timer">0:45</div>
+  </div>
+
+  <div class="stem">
+    <p class="qtext" id="qtext"></p>
+  </div>
+
+  <div class="visual-area" id="visual-area"></div>
+
+  <div class="interval-area" id="interval-area">
+    <div class="bound-group">
+      <div class="bound-label">Lower Bound</div>
+      <div class="bound-control">
+        <button class="bound-btn" id="lower-minus">&minus;</button>
+        <input type="number" class="bound-input" id="lower-bound" value="0" step="any">
+        <button class="bound-btn" id="lower-plus">+</button>
+      </div>
+    </div>
+    <div class="bound-group">
+      <div class="bound-label">Upper Bound</div>
+      <div class="bound-control">
+        <button class="bound-btn" id="upper-minus">&minus;</button>
+        <input type="number" class="bound-input" id="upper-bound" value="0" step="any">
+        <button class="bound-btn" id="upper-plus">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions" id="quiz-actions">
+    <button class="skip-btn" id="skip-btn">Skip</button>
+    <button class="submit" id="submit-btn">Submit</button>
+  </div>
+
+  <div class="breakdown-body">
+    <div class="breakdown" id="breakdown">
+      <div class="verdict" id="verdict"></div>
+      <div class="breakdown-card">
+        <div class="bd-section">
+          <div class="bd-label">Answer</div>
+          <div class="bd-answer-line" id="bd-answer"></div>
+          <div class="bd-interval-line" id="bd-interval"></div>
+        </div>
+        <div class="bd-section">
+          <div class="bd-label">Category</div>
+          <div class="bd-category" id="bd-category"></div>
+        </div>
+        <div class="bd-section">
+          <div class="bd-label">Technique</div>
+          <div class="bd-technique" id="bd-technique"></div>
+        </div>
+        <div class="bd-section">
+          <div class="bd-label">Solution</div>
+          <p class="bd-solution" id="bd-solution"></p>
+        </div>
+      </div>
+      <button class="bd-next" id="bd-next">Next</button>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================== RESULTS ==== -->
+<section id="results" class="screen">
+  <p class="score" id="score"></p>
+  <p class="score-sub" id="scoreSub"></p>
+  <div class="review" id="review"></div>
+  <div class="again">
+    <button class="submit" id="restart">Back to start</button>
+  </div>
+</section>
+
+<script src="questions.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var SECONDS_PER_Q = 45;
+
+  var el = function (id) { return document.getElementById(id); };
+
+  var state = {
+    mode: "timed",
+    deck: [],
+    index: 0,
+    answers: [],
+    timer: null,
+    left: 0,
+    locked: false
+  };
+
+  function shuffle(a) {
+    var arr = a.slice();
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function mmss(s) {
+    var m = Math.floor(s / 60);
+    var r = s % 60;
+    return m + ":" + (r < 10 ? "0" : "") + r;
+  }
+
+  function show(id) {
+    ["start", "quiz", "results"].forEach(function (s) {
+      el(s).classList.toggle("active", s === id);
+    });
+  }
+
+  function getStep(q) {
+    if (Math.abs(q.answer) >= 1000) return 100;
+    if (Math.abs(q.answer) >= 100) return 10;
+    if (q.answer !== Math.floor(q.answer)) return 0.1;
+    return 1;
+  }
+
+  function fmtNum(n) {
+    if (n === Math.floor(n)) return String(n);
+    return n.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+  }
+
+  // ----------------------------------------------------------- start
+  el("dbline").textContent = QUESTIONS.length + " questions from the Optiver assessment.";
+
+  Array.prototype.forEach.call(document.querySelectorAll(".mode"), function (b) {
+    b.addEventListener("click", function () { begin(b.dataset.mode); });
+  });
+
+  function begin(mode) {
+    state.mode = mode;
+    state.deck = shuffle(QUESTIONS);
+    state.index = 0;
+    state.answers = [];
+    show("quiz");
+    render();
+  }
+
+  // ----------------------------------------------------------- render
+  function render() {
+    var q = state.deck[state.index];
+    state.locked = false;
+
+    el("counter").textContent = (state.index + 1) + " / " + state.deck.length;
+    el("qtext").textContent = q.text;
+
+    renderVisual(q);
+
+    el("lower-bound").value = "0";
+    el("upper-bound").value = "0";
+
+    el("breakdown").classList.remove("visible");
+    el("quiz-actions").style.display = "";
+    el("interval-area").style.display = "";
+
+    startTimer();
+    window.scrollTo(0, 0);
+  }
+
+  // ----------------------------------------------------------- visuals
+  function renderVisual(q) {
+    var area = el("visual-area");
+    area.innerHTML = "";
+
+    if (q.visualType === "image" && q.imageSrc) {
+      var img = document.createElement("img");
+      img.className = "visual-img";
+      img.src = "data/cropped/" + q.imageSrc;
+      img.alt = "Question visual";
+      area.appendChild(img);
+    }
+  }
+
+  // ----------------------------------------------------------- bound buttons
+  function adjustBound(inputId, delta) {
+    if (state.locked) return;
+    var inp = el(inputId);
+    var q = state.deck[state.index];
+    var step = getStep(q);
+    var val = parseFloat(inp.value) || 0;
+    inp.value = fmtNum(Math.round((val + delta * step) * 1000) / 1000);
+  }
+
+  var holdTimer = null;
+  var holdDelay = 400;
+  var holdInterval = 80;
+
+  function startHold(inputId, delta) {
+    adjustBound(inputId, delta);
+    holdTimer = setTimeout(function repeat() {
+      adjustBound(inputId, delta);
+      holdTimer = setTimeout(repeat, holdInterval);
+    }, holdDelay);
+  }
+
+  function stopHold() {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+  }
+
+  ["lower-minus", "lower-plus", "upper-minus", "upper-plus"].forEach(function (id) {
+    var btn = el(id);
+    var inputId = id.indexOf("lower") === 0 ? "lower-bound" : "upper-bound";
+    var delta = id.indexOf("plus") !== -1 ? 1 : -1;
+
+    btn.addEventListener("mousedown", function (e) { e.preventDefault(); startHold(inputId, delta); });
+    btn.addEventListener("mouseup", stopHold);
+    btn.addEventListener("mouseleave", stopHold);
+    btn.addEventListener("touchstart", function (e) { e.preventDefault(); startHold(inputId, delta); });
+    btn.addEventListener("touchend", stopHold);
+    btn.addEventListener("touchcancel", stopHold);
+  });
+
+  // ----------------------------------------------------------- timer
+  function startTimer() {
+    clearInterval(state.timer);
+    var t = el("timer");
+
+    if (state.mode === "untimed") {
+      t.textContent = "";
+      t.classList.remove("low");
+      return;
+    }
+
+    state.left = SECONDS_PER_Q;
+    paintTimer();
+    state.timer = setInterval(function () {
+      state.left--;
+      paintTimer();
+      if (state.left <= 0) {
+        clearInterval(state.timer);
+        submitAnswer(true);
+      }
+    }, 1000);
+  }
+
+  function paintTimer() {
+    var t = el("timer");
+    t.textContent = mmss(Math.max(0, state.left));
+    t.classList.toggle("low", state.left <= 10);
+  }
+
+  // ----------------------------------------------------------- submit
+  el("submit-btn").addEventListener("click", function () { submitAnswer(false); });
+  el("skip-btn").addEventListener("click", function () { submitAnswer(true); });
+
+  function submitAnswer(skipped) {
+    if (state.locked) return;
+    state.locked = true;
+    clearInterval(state.timer);
+
+    var q = state.deck[state.index];
+    var lower = parseFloat(el("lower-bound").value) || 0;
+    var upper = parseFloat(el("upper-bound").value) || 0;
+
+    if (lower > upper) {
+      var tmp = lower;
+      lower = upper;
+      upper = tmp;
+    }
+
+    var correct = !skipped && q.answer >= lower && q.answer <= upper;
+    var width = upper - lower;
+
+    state.answers.push({
+      q: q,
+      lower: lower,
+      upper: upper,
+      width: width,
+      correct: correct,
+      skipped: skipped
+    });
+
+    el("quiz-actions").style.display = "none";
+    el("interval-area").style.display = "none";
+
+    // show breakdown
+    var verdict = el("verdict");
+    if (skipped) {
+      verdict.textContent = "Skipped";
+      verdict.className = "verdict skip-v";
+    } else if (correct) {
+      verdict.textContent = "Correct!";
+      verdict.className = "verdict ok";
+    } else {
+      verdict.textContent = "Incorrect";
+      verdict.className = "verdict no";
+    }
+
+    var unitStr = q.unit ? " " + q.unit : "";
+    el("bd-answer").textContent = fmtNum(q.answer) + unitStr;
+
+    if (skipped) {
+      el("bd-interval").textContent = "";
+    } else {
+      el("bd-interval").textContent = "Your interval: [" + fmtNum(lower) + ", " + fmtNum(upper) + "] (width: " + fmtNum(width) + ")";
+    }
+
+    el("bd-category").textContent = q.category;
+    el("bd-technique").textContent = q.technique;
+    el("bd-solution").textContent = q.note;
+
+    el("breakdown").classList.add("visible");
+  }
+
+  el("bd-next").addEventListener("click", nextQuestion);
+
+  function nextQuestion() {
+    state.index++;
+    if (state.index >= state.deck.length) finish();
+    else render();
+  }
+
+  // keyboard
+  document.addEventListener("keydown", function (e) {
+    if (!el("quiz").classList.contains("active")) return;
+    if (state.locked) {
+      if (e.key === "Enter" || e.key === " " || e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        nextQuestion();
+      }
+    }
+  });
+
+  // ----------------------------------------------------------- results
+  function finish() {
+    var right = state.answers.filter(function (a) { return a.correct; }).length;
+    var total = state.answers.length;
+
+    el("score").textContent = right + " / " + total;
+    var label = state.mode === "timed" ? "timed, 0:45 per question" : "untimed";
+    el("scoreSub").textContent = Math.round((right / total) * 100) + "% correct — " + label;
+
+    var rev = el("review");
+    rev.innerHTML = "";
+    state.answers.forEach(function (a) {
+      var row = document.createElement("div");
+      row.className = "rev-row";
+
+      var mark = document.createElement("div");
+      mark.className = "mark " + (a.correct ? "ok" : "no");
+      mark.textContent = a.correct ? "✓" : "✗";
+
+      var body = document.createElement("div");
+
+      var qp = document.createElement("p");
+      qp.className = "rq";
+      qp.textContent = a.q.text.substring(0, 120) + (a.q.text.length > 120 ? "..." : "");
+
+      var ap = document.createElement("p");
+      ap.className = "ra";
+      var unitStr = a.q.unit ? " " + a.q.unit : "";
+      if (a.skipped) {
+        ap.textContent = "Skipped";
+      } else {
+        ap.textContent = "Your interval: [" + fmtNum(a.lower) + ", " + fmtNum(a.upper) + "]" +
+          (a.correct ? " ✓" : " ✗") +
+          "  |  Answer: " + fmtNum(a.q.answer) + unitStr;
+      }
+
+      var np = document.createElement("p");
+      np.className = "note";
+      np.textContent = "Answer: " + fmtNum(a.q.answer) + unitStr;
+
+      body.appendChild(qp);
+      body.appendChild(ap);
+      if (!a.correct && !a.skipped) body.appendChild(np);
+      row.appendChild(mark);
+      row.appendChild(body);
+      rev.appendChild(row);
+    });
+
+    show("results");
+    window.scrollTo(0, 0);
+  }
+
+  el("restart").addEventListener("click", function () {
+    show("start");
+    window.scrollTo(0, 0);
+  });
+
+})();
+</script>
+</body>
+</html>
