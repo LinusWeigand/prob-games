@@ -70,7 +70,7 @@
 
   .modes{
     display:grid;
-    grid-template-columns:repeat(2, minmax(0,1fr));
+    grid-template-columns:repeat(3, minmax(0,1fr));
     border-top:1px solid var(--line);
     border-left:1px solid var(--line);
     max-width:800px;
@@ -434,19 +434,25 @@
     </p>
 
     <div class="modes">
-      <button class="mode" data-mode="timed">
-        <div class="mode-title">All questions &middot; timed</div>
+      <button class="mode" data-mode="original">
+        <div class="mode-title">Original</div>
         <div class="mode-sub">
-          Every question, shuffled.<br>
-          1:30 on the clock for each one.<br>
-          After submitting (or time runs out), the solving framework and solution are shown.
+          The 13 assessment questions, shuffled.<br>
+          1:30 per question.
         </div>
       </button>
-      <button class="mode" data-mode="untimed">
-        <div class="mode-title">All questions &middot; untimed</div>
+      <button class="mode" data-mode="same-data">
+        <div class="mode-title">+ Same Data</div>
         <div class="mode-sub">
-          Every question, shuffled. No clock.<br>
-          After submitting, the solving framework and solution are shown.
+          Original + 25 new questions on the same tables.<br>
+          Max 15 per session. 1:30 each.
+        </div>
+      </button>
+      <button class="mode" data-mode="new-examples">
+        <div class="mode-title">+ New Examples</div>
+        <div class="mode-sub">
+          Original + 25 questions with new tables, charts &amp; graphs.<br>
+          Max 15 per session. 1:30 each.
         </div>
       </button>
     </div>
@@ -514,6 +520,7 @@
 </section>
 
 <script src="questions.js"></script>
+<script src="questions-extra.js"></script>
 <script>
 (function () {
   "use strict";
@@ -555,15 +562,23 @@
   }
 
   // ----------------------------------------------------------- start
-  el("dbline").textContent = QUESTIONS.length + " questions from the Optiver assessment.";
+  el("dbline").textContent = QUESTIONS.length + " original + " + QUESTIONS_A.length + " same-data + " + QUESTIONS_B.length + " new-example questions.";
 
   Array.prototype.forEach.call(document.querySelectorAll(".mode"), function (b) {
     b.addEventListener("click", function () { begin(b.dataset.mode); });
   });
 
   function begin(mode) {
-    state.mode = mode;
-    state.deck = shuffle(QUESTIONS);
+    state.mode = "timed";
+    var pool;
+    if (mode === "original") {
+      pool = QUESTIONS;
+    } else if (mode === "same-data") {
+      pool = QUESTIONS.concat(QUESTIONS_A);
+    } else {
+      pool = QUESTIONS.concat(QUESTIONS_B);
+    }
+    state.deck = shuffle(pool).slice(0, 15);
     state.index = 0;
     state.answers = [];
     show("quiz");
@@ -602,6 +617,26 @@
       img.src = "data/photos/cropped/" + q.imageSrc;
       img.alt = "Question visual";
       area.appendChild(img);
+    } else if (q.visualType === "directed-graph" && q.graphData) {
+      var div = document.createElement("div");
+      div.className = "chart-container";
+      div.appendChild(renderDirectedGraph(q.graphData));
+      area.appendChild(div);
+    } else if (q.visualType === "line-chart" && q.chartData) {
+      var div2 = document.createElement("div");
+      div2.className = "chart-container";
+      div2.appendChild(renderLineChart(q.chartData));
+      area.appendChild(div2);
+    } else if (q.visualType === "scatter-plot" && q.chartData) {
+      var div3 = document.createElement("div");
+      div3.className = "chart-container";
+      div3.appendChild(renderScatterPlot(q.chartData));
+      area.appendChild(div3);
+    } else if (q.visualType === "bar-chart" && q.chartData) {
+      var div4 = document.createElement("div");
+      div4.className = "chart-container";
+      div4.appendChild(renderBarChart(q.chartData));
+      area.appendChild(div4);
     }
   }
 
@@ -624,11 +659,9 @@
       row.forEach(function (cell) {
         var td = document.createElement("td");
         td.textContent = cell;
-        if (cell === "?" || cell === "B" || cell === "C" || cell === "D" || cell === "E" || cell === "F" || cell === "A") {
-          if (cell.length === 1 && cell.match(/^[A-F?]$/)) {
-            td.style.fontWeight = "700";
-            td.style.color = "var(--magenta)";
-          }
+        if (/^[A-F?]$/.test(cell) || /^M[₁₂₃]$/.test(cell)) {
+          td.style.fontWeight = "700";
+          td.style.color = "var(--magenta)";
         }
         tr.appendChild(td);
       });
@@ -636,6 +669,293 @@
     });
     t.appendChild(tbody);
     return t;
+  }
+
+  // ----------------------------------------------------------- SVG charts
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag) { return document.createElementNS(NS, tag); }
+
+  function renderDirectedGraph(gd) {
+    var xs = gd.nodes.map(function(n){return n.x;});
+    var ys = gd.nodes.map(function(n){return n.y;});
+    var pad = 50;
+    var vw = Math.max.apply(null,xs) + pad * 2;
+    var vh = Math.max.apply(null,ys) + pad * 2;
+    var ox = pad, oy = pad;
+
+    var svg = svgEl("svg");
+    svg.setAttribute("viewBox", "0 0 " + vw + " " + vh);
+    svg.setAttribute("width", Math.min(vw, 400));
+
+    var defs = svgEl("defs");
+    var mk = svgEl("marker");
+    mk.setAttribute("id","ah"); mk.setAttribute("markerWidth","10");
+    mk.setAttribute("markerHeight","7"); mk.setAttribute("refX","10");
+    mk.setAttribute("refY","3.5"); mk.setAttribute("orient","auto");
+    var pg = svgEl("polygon");
+    pg.setAttribute("points","0 0,10 3.5,0 7");
+    pg.setAttribute("fill","var(--ink-soft)");
+    mk.appendChild(pg); defs.appendChild(mk); svg.appendChild(defs);
+
+    var nMap = {};
+    gd.nodes.forEach(function(n){ nMap[n.id] = {x:n.x+ox, y:n.y+oy}; });
+
+    var R = 22;
+    gd.edges.forEach(function(e){
+      var f = nMap[e.from], t = nMap[e.to];
+      var dx = t.x-f.x, dy = t.y-f.y;
+      var d = Math.sqrt(dx*dx+dy*dy);
+      var nx = dx/d, ny = dy/d;
+      var ln = svgEl("line");
+      ln.setAttribute("x1", f.x+nx*R); ln.setAttribute("y1", f.y+ny*R);
+      ln.setAttribute("x2", t.x-nx*(R+8)); ln.setAttribute("y2", t.y-ny*(R+8));
+      ln.setAttribute("stroke","var(--ink-soft)");
+      ln.setAttribute("stroke-width","1.5");
+      ln.setAttribute("marker-end","url(#ah)");
+      svg.appendChild(ln);
+    });
+
+    gd.nodes.forEach(function(n){
+      var cx = n.x+ox, cy = n.y+oy;
+      var c = svgEl("circle");
+      c.setAttribute("cx",cx); c.setAttribute("cy",cy);
+      c.setAttribute("r",R);
+      c.setAttribute("fill","#fff"); c.setAttribute("stroke","var(--magenta)");
+      c.setAttribute("stroke-width","2");
+      svg.appendChild(c);
+      var txt = svgEl("text");
+      txt.setAttribute("x",cx); txt.setAttribute("y",cy+5);
+      txt.setAttribute("text-anchor","middle");
+      txt.setAttribute("font-size","14"); txt.setAttribute("font-weight","600");
+      txt.setAttribute("fill","var(--ink)");
+      txt.textContent = n.id;
+      svg.appendChild(txt);
+    });
+
+    return svg;
+  }
+
+  function chartScales(cd, ml, mt, pw, ph) {
+    var xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+    var src = cd.series || cd.groups;
+    src.forEach(function(s) {
+      (s.data || s.points).forEach(function(p) {
+        if (p[0] < xMin) xMin = p[0]; if (p[0] > xMax) xMax = p[0];
+        if (p[1] < yMin) yMin = p[1]; if (p[1] > yMax) yMax = p[1];
+      });
+    });
+    if (cd.xRange) { xMin = cd.xRange[0]; xMax = cd.xRange[1]; }
+    if (cd.yRange) { yMin = cd.yRange[0]; yMax = cd.yRange[1]; }
+    if (!cd.xRange) { var xPad = (xMax - xMin) * 0.08 || 1; xMin -= xPad; xMax += xPad; }
+    if (!cd.yRange) { var yPad = (yMax - yMin) * 0.08 || 1; yMin -= yPad; yMax += yPad; }
+    return {
+      xMin:xMin, xMax:xMax, yMin:yMin, yMax:yMax,
+      sx: function(v){ return ml + (v - xMin)/(xMax - xMin) * pw; },
+      sy: function(v){ return mt + ph - (v - yMin)/(yMax - yMin) * ph; }
+    };
+  }
+
+  function drawAxes(svg, sc, ml, mt, pw, ph, H, cd) {
+    var ySteps = 5, yStep = (sc.yMax - sc.yMin) / ySteps;
+    for (var i = 0; i <= ySteps; i++) {
+      var yv = sc.yMin + i * yStep, gy = sc.sy(yv);
+      var gl = svgEl("line");
+      gl.setAttribute("x1",ml); gl.setAttribute("x2",ml+pw);
+      gl.setAttribute("y1",gy); gl.setAttribute("y2",gy);
+      gl.setAttribute("stroke","#e4e4e8"); gl.setAttribute("stroke-width","1");
+      svg.appendChild(gl);
+      var tl = svgEl("text");
+      tl.setAttribute("x",ml-8); tl.setAttribute("y",gy+4);
+      tl.setAttribute("text-anchor","end");
+      tl.setAttribute("font-size","10"); tl.setAttribute("fill","var(--ink-faint)");
+      tl.textContent = Math.round(yv*10)/10;
+      svg.appendChild(tl);
+    }
+    var xSteps = Math.min(10, Math.round(sc.xMax - sc.xMin));
+    if (xSteps < 2) xSteps = 5;
+    var xStep = (sc.xMax - sc.xMin) / xSteps;
+    for (var j = 0; j <= xSteps; j++) {
+      var xv = sc.xMin + j * xStep, gx = sc.sx(xv);
+      var xt = svgEl("text");
+      xt.setAttribute("x",gx); xt.setAttribute("y",mt+ph+20);
+      xt.setAttribute("text-anchor","middle");
+      xt.setAttribute("font-size","10"); xt.setAttribute("fill","var(--ink-faint)");
+      xt.textContent = Math.round(xv*10)/10;
+      svg.appendChild(xt);
+    }
+    var xa = svgEl("line");
+    xa.setAttribute("x1",ml); xa.setAttribute("x2",ml+pw);
+    xa.setAttribute("y1",mt+ph); xa.setAttribute("y2",mt+ph);
+    xa.setAttribute("stroke","var(--ink-soft)"); xa.setAttribute("stroke-width","1");
+    svg.appendChild(xa);
+    var ya = svgEl("line");
+    ya.setAttribute("x1",ml); ya.setAttribute("x2",ml);
+    ya.setAttribute("y1",mt); ya.setAttribute("y2",mt+ph);
+    ya.setAttribute("stroke","var(--ink-soft)"); ya.setAttribute("stroke-width","1");
+    svg.appendChild(ya);
+    var xlbl = svgEl("text");
+    xlbl.setAttribute("x",ml+pw/2); xlbl.setAttribute("y",H-5);
+    xlbl.setAttribute("text-anchor","middle");
+    xlbl.setAttribute("font-size","12"); xlbl.setAttribute("fill","var(--ink-soft)");
+    xlbl.textContent = cd.xLabel;
+    svg.appendChild(xlbl);
+    var ylbl = svgEl("text");
+    ylbl.setAttribute("x",14); ylbl.setAttribute("y",mt+ph/2);
+    ylbl.setAttribute("text-anchor","middle");
+    ylbl.setAttribute("font-size","12"); ylbl.setAttribute("fill","var(--ink-soft)");
+    ylbl.setAttribute("transform","rotate(-90,14,"+(mt+ph/2)+")");
+    ylbl.textContent = cd.yLabel;
+    svg.appendChild(ylbl);
+  }
+
+  function drawLegend(svg, items, ml, mt, pw) {
+    items.forEach(function(it, i) {
+      var lx = ml + pw + 15, ly = mt + 5 + i * 20;
+      var shape = svgEl(it.circle ? "circle" : "rect");
+      if (it.circle) {
+        shape.setAttribute("cx",lx+6); shape.setAttribute("cy",ly+6);
+        shape.setAttribute("r","5");
+      } else {
+        shape.setAttribute("x",lx); shape.setAttribute("y",ly);
+        shape.setAttribute("width","12"); shape.setAttribute("height","12");
+        shape.setAttribute("rx","2");
+      }
+      shape.setAttribute("fill",it.color);
+      svg.appendChild(shape);
+      var lt = svgEl("text");
+      lt.setAttribute("x",lx+17); lt.setAttribute("y",ly+10);
+      lt.setAttribute("font-size","10"); lt.setAttribute("fill","var(--ink)");
+      lt.textContent = it.name;
+      svg.appendChild(lt);
+    });
+  }
+
+  function renderLineChart(cd) {
+    var W=600, H=380, ml=55, mr=120, mt=30, mb=45;
+    var pw=W-ml-mr, ph=H-mt-mb;
+    var svg = svgEl("svg");
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
+
+    var sc = chartScales(cd, ml, mt, pw, ph);
+    drawAxes(svg, sc, ml, mt, pw, ph, H, cd);
+
+    cd.series.forEach(function(s) {
+      var pts = s.data.map(function(p){ return sc.sx(p[0])+","+sc.sy(p[1]); }).join(" ");
+      var pl = svgEl("polyline");
+      pl.setAttribute("points",pts);
+      pl.setAttribute("fill","none");
+      pl.setAttribute("stroke",s.color);
+      pl.setAttribute("stroke-width","2");
+      svg.appendChild(pl);
+      s.data.forEach(function(p) {
+        var dot = svgEl("circle");
+        dot.setAttribute("cx",sc.sx(p[0])); dot.setAttribute("cy",sc.sy(p[1]));
+        dot.setAttribute("r","2.5"); dot.setAttribute("fill",s.color);
+        svg.appendChild(dot);
+      });
+    });
+
+    drawLegend(svg, cd.series.map(function(s){ return {name:s.name,color:s.color}; }), ml, mt, pw);
+    return svg;
+  }
+
+  function renderScatterPlot(cd) {
+    var W=600, H=380, ml=55, mr=120, mt=30, mb=45;
+    var pw=W-ml-mr, ph=H-mt-mb;
+    var svg = svgEl("svg");
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
+
+    var sc = chartScales(cd, ml, mt, pw, ph);
+    drawAxes(svg, sc, ml, mt, pw, ph, H, cd);
+
+    cd.groups.forEach(function(g) {
+      g.points.forEach(function(p) {
+        var dot = svgEl("circle");
+        dot.setAttribute("cx",sc.sx(p[0])); dot.setAttribute("cy",sc.sy(p[1]));
+        dot.setAttribute("r","5"); dot.setAttribute("fill",g.color);
+        dot.setAttribute("opacity","0.75");
+        svg.appendChild(dot);
+      });
+    });
+
+    drawLegend(svg, cd.groups.map(function(g){ return {name:g.name,color:g.color,circle:true}; }), ml, mt, pw);
+    return svg;
+  }
+
+  function renderBarChart(cd) {
+    var W=600, H=380, ml=55, mr=120, mt=30, mb=55;
+    var pw=W-ml-mr, ph=H-mt-mb;
+    var svg = svgEl("svg");
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
+
+    var yMax = 0;
+    cd.series.forEach(function(s){ s.values.forEach(function(v){ if(v>yMax) yMax=v; }); });
+    yMax = Math.ceil(yMax * 1.15);
+
+    var sy = function(v){ return mt + ph - (v/yMax)*ph; };
+
+    var ySteps = 5, yStep = yMax / ySteps;
+    for (var i=0; i<=ySteps; i++) {
+      var yv = i*yStep, gy = sy(yv);
+      var gl = svgEl("line");
+      gl.setAttribute("x1",ml); gl.setAttribute("x2",ml+pw);
+      gl.setAttribute("y1",gy); gl.setAttribute("y2",gy);
+      gl.setAttribute("stroke","#e4e4e8"); gl.setAttribute("stroke-width","1");
+      svg.appendChild(gl);
+      var tl = svgEl("text");
+      tl.setAttribute("x",ml-8); tl.setAttribute("y",gy+4);
+      tl.setAttribute("text-anchor","end");
+      tl.setAttribute("font-size","10"); tl.setAttribute("fill","var(--ink-faint)");
+      tl.textContent = Math.round(yv);
+      svg.appendChild(tl);
+    }
+
+    var xa = svgEl("line");
+    xa.setAttribute("x1",ml); xa.setAttribute("x2",ml+pw);
+    xa.setAttribute("y1",mt+ph); xa.setAttribute("y2",mt+ph);
+    xa.setAttribute("stroke","var(--ink-soft)"); xa.setAttribute("stroke-width","1");
+    svg.appendChild(xa);
+
+    var nCats = cd.categories.length, nSer = cd.series.length;
+    var catW = pw / nCats;
+    var barW = catW * 0.7 / nSer;
+
+    cd.categories.forEach(function(cat, ci) {
+      var cx = ml + ci*catW + catW/2;
+      var cl = svgEl("text");
+      cl.setAttribute("x",cx); cl.setAttribute("y",mt+ph+18);
+      cl.setAttribute("text-anchor","middle");
+      cl.setAttribute("font-size","9"); cl.setAttribute("fill","var(--ink-soft)");
+      cl.textContent = cat;
+      svg.appendChild(cl);
+
+      cd.series.forEach(function(s, si) {
+        var bx = cx - (nSer*barW)/2 + si*barW;
+        var bh = (s.values[ci]/yMax)*ph;
+        var rect = svgEl("rect");
+        rect.setAttribute("x",bx); rect.setAttribute("y",mt+ph-bh);
+        rect.setAttribute("width",Math.max(barW-2,2)); rect.setAttribute("height",bh);
+        rect.setAttribute("fill",s.color); rect.setAttribute("rx","2");
+        svg.appendChild(rect);
+      });
+    });
+
+    var xlbl = svgEl("text");
+    xlbl.setAttribute("x",ml+pw/2); xlbl.setAttribute("y",H-5);
+    xlbl.setAttribute("text-anchor","middle");
+    xlbl.setAttribute("font-size","12"); xlbl.setAttribute("fill","var(--ink-soft)");
+    xlbl.textContent = cd.xLabel;
+    svg.appendChild(xlbl);
+    var ylbl = svgEl("text");
+    ylbl.setAttribute("x",14); ylbl.setAttribute("y",mt+ph/2);
+    ylbl.setAttribute("text-anchor","middle");
+    ylbl.setAttribute("font-size","12"); ylbl.setAttribute("fill","var(--ink-soft)");
+    ylbl.setAttribute("transform","rotate(-90,14,"+(mt+ph/2)+")");
+    ylbl.textContent = cd.yLabel;
+    svg.appendChild(ylbl);
+
+    drawLegend(svg, cd.series.map(function(s){ return {name:s.name,color:s.color}; }), ml, mt, pw);
+    return svg;
   }
 
   // ----------------------------------------------------------- rank items

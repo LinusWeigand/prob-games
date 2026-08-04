@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "likelihood-list",
+      "runtimeExecutable": "/opt/homebrew/bin/python3.12",
+      "runtimeArgs": ["-m", "http.server", "8091", "-d", "3-likelihood-list"],
+      "port": 8091
+    }
+  ]
+}
