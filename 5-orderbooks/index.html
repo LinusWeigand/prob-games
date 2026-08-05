@@ -84,6 +84,21 @@ details.rrow summary::-webkit-details-marker{display:none}
   .cell.empty{display:none}
   .formGrid{grid-template-columns:1fr 1fr}
   #app{padding:16px}
+  .panel{padding:20px 18px}
+  .resGrid{grid-template-columns:repeat(2,auto);gap:10px 24px}
+  details.rrow summary{grid-template-columns:30px 1fr;gap:6px;font-size:13px}
+  details.rrow summary span:nth-child(3){display:none}
+  details.rrow summary span:nth-child(4){display:none}
+  .sol{padding:2px 4px 12px 36px;font-size:13px}
+}
+@media(max-width:500px){
+  .grid{grid-template-columns:1fr}
+  .formGrid{grid-template-columns:1fr}
+  .field[style*="grid-column:span 2"]{grid-column:span 1!important}
+  h1{font-size:20px}
+  .quotes{gap:6px}
+  .quote .price{font-size:14px}
+  .footer{flex-wrap:wrap;justify-content:center}
 }
 </style>
 </head>

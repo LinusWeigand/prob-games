@@ -69,10 +69,10 @@
 
   .modes{
     display:grid;
-    grid-template-columns:minmax(0,1fr);
+    grid-template-columns:repeat(3, minmax(0,1fr));
     border-top:1px solid var(--line);
     border-left:1px solid var(--line);
-    max-width:420px;
+    max-width:720px;
   }
   .mode{
     border-right:1px solid var(--line);
@@ -362,7 +362,7 @@
       Find the <b>missing term</b> in each sequence.
     </p>
 
-    <div class="modes" style="display:grid;grid-template-columns:repeat(3,1fr);max-width:720px;">
+    <div class="modes">
       <button class="mode" data-mode="timed">
         <div class="mode-title">Timed</div>
         <div class="mode-sub">15 real sequences, 2:00 each.</div>

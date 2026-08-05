@@ -70,6 +70,7 @@
   .modes{
     display:grid;
     grid-template-columns:repeat(3, minmax(0,1fr));
+    gap:.5rem;
     border-top:1px solid var(--line);
     border-left:1px solid var(--line);
     max-width:1180px;
@@ -431,7 +432,7 @@
       not expected to compute the exact value.
     </p>
 
-    <div class="modes" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;">
+    <div class="modes">
       <button class="mode" data-mode="timed">
         <div class="mode-title">Timed</div>
         <div class="mode-sub">15 real questions, 2:00 each.</div>
