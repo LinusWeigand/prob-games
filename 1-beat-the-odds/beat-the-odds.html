@@ -673,8 +673,8 @@
   var MEDIUM_POOL = MEDIUM_GEN.concat(PHOTO_POOL);
   var HARD_POOL   = HARD_GEN.concat(PHOTO_POOL);
   var ALL_GENERATED = QUESTIONS_EXTRA.concat(QUESTIONS_DIFFICULTY);
-  var EXTENDED = OPTIVER.concat(ALL_GENERATED);
   var ALL_POOL = QUESTIONS.concat(ALL_GENERATED);
+  var EXTENDED = ALL_POOL;
 
   (function fillDbLine() {
     el("dbline").textContent =
