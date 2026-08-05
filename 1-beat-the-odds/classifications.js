@@ -263,7 +263,145 @@ var CLASSIFY = {
   "x148":   { q: "D", t: "Coupon collector",                    f: "E = n · Hₙ" },
   "x149":   { q: "A", t: "Direct count",                        f: "2 / C(2n, n)" },
   "x150":   { q: "A", t: "Complement",                          f: "1 − C(good, k) / C(N, k)" },
-  "x151":   { q: "A", t: "Sequential conditioning",             f: "(same−1) / (total−1)" }
+  "x151":   { q: "A", t: "Sequential conditioning",             f: "(same−1) / (total−1)" },
+
+  /* ── MEDIUM (x200 -- x249) ─────────────────────────────────────────────── */
+
+  // Conditional Probability & Bayes
+  "x200":   { q: "A", t: "Conditional counting",                  f: "Favorable (given sum) / Total (given sum)" },
+  "x201":   { q: "A", t: "Bayes' theorem",                        f: "P(A|R) = P(R|A)P(A) / P(R)" },
+  "x202":   { q: "A", t: "Bayes' theorem",                        f: "P(D|+) = P(+|D)P(D) / P(+)" },
+  "x203":   { q: "A", t: "Bayes' theorem",                        f: "P(C|HH) = P(HH|C) / Σ P(HH|·)" },
+  "x204":   { q: "A", t: "Conditional counting",                  f: "Favorable / |at least one 6|" },
+  "x205":   { q: "A", t: "Conditional probability",               f: "P(exactly 1H | ≥1H) = P(1H) / (1−P(0H))" },
+
+  // Multi-step Counting & PIE
+  "x206":   { q: "A", t: "Law of total probability",              f: "Σ P(die=k) · C(k,3)/2ᵏ" },
+  "x207":   { q: "A", t: "Direct count (multinomial)",            f: "C(6,1)·[C(4,3)·5 + 1] / 6⁴" },
+  "x208":   { q: "A", t: "Inclusion-exclusion (PIE)",             f: "1 − Σ(−1)ⁱ C(4,i) C(13(4−i),5) / C(52,5)" },
+  "x209":   { q: "A", t: "Block counting",                        f: "6! · 3! / 8!" },
+  "x210":   { q: "A", t: "Direct count (exhaustive)",             f: "Favorable / Total" },
+  "x211":   { q: "A", t: "Inclusion-exclusion (PIE)",             f: "Σ(−1)ⁱ C(6,i)(6−i)ⁿ / 6ⁿ" },
+
+  // Expected Value with Conditioning
+  "x212":   { q: "C", t: "Linearity of expectation",              f: "E = Σ pᵢ · vᵢ" },
+  "x213":   { q: "C", t: "Linearity of expectation",              f: "E = Σ pᵢ · vᵢ" },
+  "x214":   { q: "C", t: "Conditional expectation",               f: "E[X | X ≥ k] = Σ x·P(x) / P(X≥k)" },
+  "x215":   { q: "D", t: "Wald's identity",                       f: "E[sum] = E[N] · E[X] + E[final]" },
+  "x216":   { q: "C", t: "Tower property (iterated E)",           f: "E = E[X] + E[X] · E[die]" },
+  "x217":   { q: "A", t: "Direct count (order statistics)",       f: "Enumerate median = k cases" },
+
+  // Moderate Markov / Walks
+  "x218":   { q: "D", t: "Pattern recursion",                     f: "State recursion (HHH: E = 14)" },
+  "x219":   { q: "B", t: "Gambler's ruin (biased, no upper)",     f: "P(reach n from k) = (p/q)ⁿ⁻ᵏ" },
+  "x220":   { q: "D", t: "Pattern recursion",                     f: "State recursion (TT with bias)" },
+  "x221":   { q: "A", t: "Direct count (binomial)",               f: "C(n,k) pᵏ (1−p)ⁿ⁻ᵏ" },
+  "x222":   { q: "B", t: "Geometric series (even index)",         f: "Σ (5/6)²ᵏ⁻¹ · (1/6)" },
+
+  // Games & Mixed
+  "x223":   { q: "B", t: "Geometric series (turn-based)",         f: "P = (1/6) / (1 − (5/6)³)" },
+  "x224":   { q: "B", t: "Geometric series (turn-based)",         f: "P = p / (1 − (1−p)²)" },
+  "x225":   { q: "A", t: "Symmetry (mod arithmetic)",             f: "Uniform residues mod 3 → P = 1/3" },
+  "x226":   { q: "A", t: "Direct count (hypergeometric)",         f: "3 · C(4,2) / C(12,2)" },
+  "x227":   { q: "A", t: "Circular arrangement",                  f: "Fix one group, place other in gaps" },
+  "x228":   { q: "A", t: "Direct count (constrained)",            f: "Adjacent positions · (1/2)ⁿ" },
+  "x229":   { q: "A", t: "Complement (Poisson approx)",           f: "1 − e⁻λ(1 + λ),  λ = np" },
+  "x230":   { q: "A", t: "Complement",                            f: "1 − P(all different suits)" },
+  "x231":   { q: "A", t: "Block counting",                        f: "4! · 2! / 5!" },
+  "x232":   { q: "A", t: "Direct count (independent events)",     f: "Σ pᵢ · Π(1−pⱼ)" },
+  "x233":   { q: "A", t: "Inclusion-exclusion (PIE)",             f: "P(A∪B) = P(A) + P(B) − P(A∩B)" },
+  "x234":   { q: "A", t: "Binomial CDF (central range)",          f: "Σ C(n,k)/2ⁿ for k=8..12" },
+  "x235":   { q: "C", t: "Linearity of indicators",               f: "E = 7 · (6/7)¹⁰" },
+  "x236":   { q: "D", t: "Birthday / first collision",            f: "E[first duplicate] in n types" },
+  "x237":   { q: "A", t: "Direct count (hypergeometric)",         f: "Σ C(R,k)C(B,n−k) / C(N,n)" },
+  "x238":   { q: "A", t: "Complement (binomial tail)",            f: "1 − Σ C(n,k)(1/6)ᵏ(5/6)ⁿ⁻ᵏ for k=0..2" },
+  "x239":   { q: "A", t: "Direct count (exhaustive)",             f: "Count pairs with XY > 50" },
+  "x240":   { q: "A", t: "Symmetry (first relevant card)",        f: "P = (red non-aces) / (all relevant)" },
+  "x241":   { q: "A", t: "Direct count (binomial)",               f: "Σ C(n,k)(1/3)ᵏ(2/3)ⁿ⁻ᵏ for k > n/2" },
+  "x242":   { q: "A", t: "Inclusion-exclusion (PIE)",             f: "1 − P(no face) − P(no ace) + P(neither)" },
+  "x243":   { q: "A", t: "Symmetry (ordering)",                   f: "1 / k!  (one of k! orderings)" },
+  "x244":   { q: "A", t: "Direct count",                          f: "C(k−1, n−1) / C(N, n)" },
+  "x245":   { q: "A", t: "Direct count (hypergeometric)",         f: "C(26,2)² / C(52,4)" },
+  "x246":   { q: "A", t: "Symmetry (ordering)",                   f: "1 / 4!" },
+  "x247":   { q: "D", t: "First success (geometric)",             f: "E ≈ 1/p  where p = 4/52" },
+  "x248":   { q: "C", t: "Linearity of indicators",               f: "6 · P(face appears ≥ 2 times in n rolls)" },
+  "x249":   { q: "C", t: "Linearity of indicators (records)",     f: "E = Hₙ = Σ 1/k" },
+
+  /* ── HARD (x300 -- x349) ───────────────────────────────────────────────── */
+
+  // Gambler's Ruin & Complex Walks
+  "x300":   { q: "B", t: "Gambler's ruin (asymmetric steps)",     f: "System of equations P(k) with boundaries" },
+  "x301":   { q: "B", t: "Gambler's ruin (biased)",               f: "P = (1 − rⁱ) / (1 − rᴺ),  r = q/p" },
+  "x302":   { q: "B", t: "Renewal recurrence",                    f: "pₙ = (1/2)pₙ₋₁ + (1/2)pₙ₋₂ → 2/3" },
+  "x303":   { q: "D", t: "Hitting time (drift shortcut)",         f: "E = distance / drift = 1 / E[step]" },
+  "x304":   { q: "D", t: "Hitting time (lazy walk)",              f: "E = 2k²  (lazy symmetric walk)" },
+  "x305":   { q: "B", t: "First-step (cube / Hamming)",           f: "Track Hamming distance, multiply transition probs" },
+
+  // Complex Conditional Probability
+  "x306":   { q: "A", t: "Bayes' theorem (multi-urn)",            f: "P(A|2R) = P(2R|A) / Σ P(2R|·)" },
+  "x307":   { q: "A", t: "Bayes' theorem (likelihood ratio)",     f: "P(loaded|data) = L₁ / (L₁ + L₂)" },
+  "x308":   { q: "A", t: "Symmetry (ordering)",                   f: "4!·4! / 8!  (Aces before Kings)" },
+
+  // Non-obvious Combinatorics
+  "x309":   { q: "A", t: "Lucas numbers (circular Fibonacci)",    f: "L_n / 2ⁿ" },
+  "x310":   { q: "C", t: "Direct expectation (integral)",         f: "∫₀^{1/3} (1−3t)² dt = 1/9" },
+  "x311":   { q: "A", t: "Estimation (vanishingly rare)",         f: "E[adjacent same-suit] ≈ 12 → P ≈ 0" },
+  "x312":   { q: "C", t: "Linearity of indicators",               f: "E = n · (1/n) = 1" },
+  "x313":   { q: "C", t: "Linearity of indicators",               f: "E = C(n,2) / 365" },
+
+  // Multi-stage Optimal Strategy
+  "x314":   { q: "E", t: "Optimal stopping (backwards)",          f: "Work backwards: keep ≥ E[continue]" },
+  "x315":   { q: "E", t: "Hedging (backwards induction)",         f: "max_f min((1+2f)V(r−1,b), (1−f)V(r,b−1))" },
+  "x316":   { q: "E", t: "Optimal stopping (risk of ruin)",       f: "Stop when sum ≥ threshold; threshold from EV" },
+  "x317":   { q: "E", t: "Optimal stopping (backwards)",          f: "Vₖ = max(x, Vₖ₊₁);  threshold = Vₖ₊₁" },
+
+  // Complex Expected Value
+  "x318":   { q: "D", t: "Recursion on running max",              f: "E[next increase from max k] = 6/(6−k)" },
+  "x319":   { q: "D", t: "Birthday / first triple",               f: "Markov chain on bin occupancies" },
+  "x320":   { q: "C", t: "Factorize independence",                f: "E[XY] = E[X]·E[Y] = 3.5²" },
+  "x321":   { q: "C", t: "Direct expectation",                    f: "E[2^|X−Y|] = Σ P(d)·2ᵈ" },
+  "x322":   { q: "D", t: "First success (union of events)",       f: "P(consecutive pair) per draw, geometric" },
+
+  // Tricky / Surprise Results
+  "x323":   { q: "B", t: "Renewal theory (lattice)",              f: "P(hit n) → 1/E[X] = 2/7" },
+  "x324":   { q: "C", t: "Martingale (Polya urn)",                f: "Fraction is a martingale → E = 1/2" },
+  "x325":   { q: "B", t: "Reflection / cycle lemma",              f: "P(no tie) = C(2n,n) / 2²ⁿ" },
+  "x326":   { q: "D", t: "Absorbing barrier (fair walk)",         f: "P(hit −k) = 1 → E[final] = −k" },
+
+  // Optimal Stopping (continued)
+  "x327":   { q: "E", t: "Optimal stopping (backwards)",          f: "Vₖ = Vₖ₊₁² + (1−Vₖ₊₁²)/2; threshold = V₂" },
+
+  // Generating Functions / Advanced Counting
+  "x328":   { q: "A", t: "Generating functions (coin change)",    f: "Coefficient of x¹⁰⁰ in product of GFs" },
+  "x329":   { q: "A", t: "Multinomial (independent placement)",   f: "n! / (k!ᵐ) / mⁿ" },
+  "x330":   { q: "A", t: "Stars and bars (non-decreasing)",       f: "C(n+k−1, k) / Total" },
+  "x331":   { q: "C", t: "Linearity of indicators",               f: "E = C(n,2) · (1/9)²" },
+  "x332":   { q: "C", t: "Linearity of indicators",               f: "E = rows · P(increasing) = 4/4!" },
+
+  // Complex Markov Chains
+  "x333":   { q: "B", t: "Renewal recurrence",                    f: "pₙ = (pₙ₋₁+pₙ₋₂+pₙ₋₃)/3 → 1/E[X]" },
+  "x334":   { q: "B", t: "Renewal recurrence",                    f: "pₙ = (1/2)pₙ₋₁ + (1/2)pₙ₋₂ → 2/3" },
+  "x335":   { q: "D", t: "Pattern recursion",                     f: "State recursion (HTH: E = 10)" },
+  "x336":   { q: "B", t: "Renewal theory (lattice)",              f: "P(hit n) → 1/E[X] = 2/7" },
+
+  // Geometry & Continuous Probability
+  "x337":   { q: "A", t: "Direct count (geometric area)",         f: "1 − ((D−w)/D)²" },
+  "x338":   { q: "A", t: "Semicircle (order statistics)",         f: "P = n / 2ⁿ⁻¹" },
+  "x339":   { q: "A", t: "Buffon's needle",                       f: "P = 2L / (πD)" },
+  "x340":   { q: "C", t: "Direct expectation (integral)",         f: "E[r] = ∫₀¹ r · 2r dr = 2/3" },
+
+  // Random Permutations & Arrangements
+  "x341":   { q: "A", t: "Direct count (derangements)",           f: "D(n) / n! ≈ 1/e" },
+  "x342":   { q: "C", t: "Linearity of indicators (descents)",    f: "E[runs] = 1 + (n−1)/2" },
+  "x343":   { q: "A", t: "Impossibility argument",                f: "Exactly n−1 fixed points is impossible" },
+  "x344":   { q: "A", t: "Symmetry",                              f: "P = k / n" },
+
+  // Multi-step Games
+  "x345":   { q: "A", t: "Bayes' theorem (Monty Hall)",           f: "P = (1/3) / (1/3 + (1/3)(1/2)) = 2/3" },
+  "x346":   { q: "E", t: "Best response (pure strategy)",         f: "Pick move that beats opponent's most likely" },
+  "x347":   { q: "C", t: "Linearity of indicators",               f: "E = n · (1/n) = 1" },
+  "x348":   { q: "E", t: "Kelly criterion",                       f: "f* = 2p−1;  E[bankroll] = W₀·(1+f·(2p−1))ⁿ" },
+  "x349":   { q: "B", t: "Cycle structure (100 prisoners)",       f: "P = 1 − Σ 1/k  for k > n/2" }
 };
 
 if (typeof module !== "undefined" && module.exports) {

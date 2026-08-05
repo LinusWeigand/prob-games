@@ -79,10 +79,10 @@ var QUESTIONS = [
   {
     id: "seq-p09",
     sequence: ["21", "20", "22", "18", "26", "10", "?"],
-    options: ["−22", "9", "58", "17"],
+    options: ["42", "9", "58", "17"],
     answer: 0,
     pattern: "geometric-diff",
-    note: "Differences: −1, +2, −4, +8, −16. Absolute values double, signs alternate. Strictly, the next difference should be +32 (giving 42), but 42 is not among the options. The intended answer −22 treats the next difference as −32."
+    note: "Differences: −1, +2, −4, +8, −16. Absolute values double, signs alternate. Next difference is +32, so 10+32=42."
   },
   {
     id: "seq-p10",

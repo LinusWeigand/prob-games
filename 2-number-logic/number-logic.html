@@ -362,14 +362,34 @@
       Find the <b>missing term</b> in each sequence.
     </p>
 
-    <div class="modes">
-      <button class="mode" id="start-btn">
-        <div class="mode-title">15 questions &middot; timed &middot; extended</div>
-        <div class="mode-sub">
-          15 randomly drawn sequences from the full pool.<br>
-          2:00 on the clock for each one.<br>
-          After each answer see the <b>pattern, technique, formula &amp; solution</b>.
-        </div>
+    <div class="modes" style="display:grid;grid-template-columns:repeat(3,1fr);max-width:720px;">
+      <button class="mode" data-mode="timed">
+        <div class="mode-title">Timed</div>
+        <div class="mode-sub">15 real sequences, 2:00 each.</div>
+      </button>
+      <button class="mode" data-mode="all">
+        <div class="mode-title">Full DB</div>
+        <div class="mode-sub">All real sequences, untimed.</div>
+      </button>
+      <button class="mode" data-mode="photo">
+        <div class="mode-title">Photo Only</div>
+        <div class="mode-sub">Real assessment only, untimed.</div>
+      </button>
+      <button class="mode" data-mode="easy">
+        <div class="mode-title">Easy</div>
+        <div class="mode-sub">50 generated + real, timed.</div>
+      </button>
+      <button class="mode" data-mode="medium">
+        <div class="mode-title">Medium</div>
+        <div class="mode-sub">50 harder + real, timed.</div>
+      </button>
+      <button class="mode" data-mode="hard">
+        <div class="mode-title">Hard</div>
+        <div class="mode-sub">50 hardest + real, timed.</div>
+      </button>
+      <button class="mode" data-mode="extended">
+        <div class="mode-title">Extended</div>
+        <div class="mode-sub">15 from the full pool, timed.</div>
       </button>
     </div>
 
@@ -435,6 +455,7 @@
 
 <script src="questions.js"></script>
 <script src="questions-extra.js"></script>
+<script src="questions-difficulty.js"></script>
 <script src="classifications.js"></script>
 <script>
 (function () {
@@ -446,6 +467,7 @@
   var el = function (id) { return document.getElementById(id); };
 
   var state = {
+    mode: "timed",
     deck: [],
     index: 0,
     picked: null,
@@ -485,19 +507,43 @@
 
   /* --------------------------------------------------------------- start */
 
-  var POOL = QUESTIONS.concat(QUESTIONS_EXTRA);
+  var PHOTO_POOL  = QUESTIONS;
+  var EASY_GEN    = QUESTIONS_EXTRA;
+  var MEDIUM_GEN  = QUESTIONS_DIFFICULTY.filter(function (q) { return q.difficulty === "medium"; });
+  var HARD_GEN    = QUESTIONS_DIFFICULTY.filter(function (q) { return q.difficulty === "hard"; });
+  var EASY_POOL   = EASY_GEN.concat(PHOTO_POOL);
+  var MEDIUM_POOL = MEDIUM_GEN.concat(PHOTO_POOL);
+  var HARD_POOL   = HARD_GEN.concat(PHOTO_POOL);
+  var ALL_GENERATED = QUESTIONS_EXTRA.concat(QUESTIONS_DIFFICULTY);
+  var EXTENDED    = QUESTIONS.concat(ALL_GENERATED);
+  var ALL_POOL    = EXTENDED;
 
   (function fillDbLine() {
     el("dbline").textContent =
-      QUESTIONS.length + " real sequences from the Optiver assessment. " +
-      QUESTIONS_EXTRA.length + " generated practice sequences. " +
-      "Total pool: " + POOL.length + ".";
+      QUESTIONS.length + " real sequences. " +
+      EASY_GEN.length + " easy, " + MEDIUM_GEN.length + " medium, " +
+      HARD_GEN.length + " hard generated. " +
+      "Total pool: " + ALL_POOL.length + ".";
   })();
 
-  el("start-btn").addEventListener("click", begin);
+  Array.prototype.forEach.call(document.querySelectorAll(".mode"), function (b) {
+    b.addEventListener("click", function () { begin(b.dataset.mode); });
+  });
 
-  function begin() {
-    state.deck    = shuffle(POOL).slice(0, TIMED_COUNT);
+  function begin(mode) {
+    state.mode = mode;
+    var pool;
+    switch (mode) {
+      case "easy":     pool = EASY_POOL;   break;
+      case "medium":   pool = MEDIUM_POOL; break;
+      case "hard":     pool = HARD_POOL;   break;
+      case "photo":    pool = PHOTO_POOL;  break;
+      case "extended": pool = EXTENDED;    break;
+      case "all":      pool = QUESTIONS;   break;
+      default:         pool = QUESTIONS;   break;
+    }
+    state.deck = shuffle(pool);
+    if (mode !== "all" && mode !== "photo") state.deck = state.deck.slice(0, TIMED_COUNT);
     state.index   = 0;
     state.answers = [];
     show("quiz");
@@ -574,6 +620,14 @@
 
   function startTimer() {
     clearInterval(state.timer);
+    var t = el("timer");
+
+    if (state.mode === "all" || state.mode === "photo") {
+      t.textContent = "";
+      t.classList.remove("low");
+      return;
+    }
+
     state.left = SECONDS_PER_Q;
     paintTimer();
     state.timer = setInterval(function () {
@@ -673,8 +727,17 @@
     var total = state.answers.length;
 
     el("score").textContent = right + " / " + total;
+    var label = {
+      timed:    "timed run, 15 shuffled from the real set",
+      all:      "full database, untimed",
+      photo:    "real assessment sequences only, untimed",
+      easy:     "easy difficulty, timed",
+      medium:   "medium difficulty, timed",
+      hard:     "hard difficulty, timed",
+      extended: "timed run, 15 shuffled from the full extended pool"
+    }[state.mode];
     el("scoreSub").textContent =
-      Math.round((right / total) * 100) + "% correct — 15 timed sequences from the extended pool";
+      Math.round((right / total) * 100) + "% correct — " + label;
 
     var rev = el("review");
     rev.innerHTML = "";

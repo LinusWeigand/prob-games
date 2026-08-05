@@ -431,45 +431,42 @@
       not expected to compute the exact value.
     </p>
 
-    <div class="modes">
+    <div class="modes" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;">
       <button class="mode" data-mode="timed">
-        <div class="mode-title">15 questions &middot; timed</div>
-        <div class="mode-sub">
-          15 randomly drawn questions, shuffled.<br>
-          2:00 on the clock for each one &mdash; when it runs out the question is
-          skipped automatically.
-        </div>
+        <div class="mode-title">Timed</div>
+        <div class="mode-sub">15 real questions, 2:00 each.</div>
       </button>
       <button class="mode" data-mode="all">
-        <div class="mode-title">Full database &middot; untimed</div>
-        <div class="mode-sub">
-          Every question in the database, shuffled.<br>
-          No clock. Work through them at your own pace.
-        </div>
+        <div class="mode-title">Full DB</div>
+        <div class="mode-sub">All real questions, untimed.</div>
       </button>
-      <button class="mode" data-mode="extended">
-        <div class="mode-title">15 questions &middot; timed &middot; extended</div>
-        <div class="mode-sub">
-          Same format, drawn from the real Optiver questions <b>plus</b> 151
-          extra practice questions written in the same style.<br>
-          2:00 per question.
-        </div>
+      <button class="mode" data-mode="photo">
+        <div class="mode-title">Photo Only</div>
+        <div class="mode-sub">Photo/recall questions, untimed.</div>
+      </button>
+      <button class="mode" data-mode="easy">
+        <div class="mode-title">Easy</div>
+        <div class="mode-sub">151 generated + photos, timed.</div>
+      </button>
+      <button class="mode" data-mode="medium">
+        <div class="mode-title">Medium</div>
+        <div class="mode-sub">50 harder + photos, timed.</div>
+      </button>
+      <button class="mode" data-mode="hard">
+        <div class="mode-title">Hard</div>
+        <div class="mode-sub">50 hardest + photos, timed.</div>
       </button>
       <button class="mode" data-mode="classify">
-        <div class="mode-title">Classify &middot; 30s flashcards</div>
-        <div class="mode-sub">
-          15 questions from the full pool. No multiple choice &mdash;
-          classify the <b>quadrant, technique &amp; formula</b>, then flip the
-          card to check. 0:30 per question.
-        </div>
+        <div class="mode-title">Classify</div>
+        <div class="mode-sub">Flashcards: quadrant, technique &amp; formula.</div>
       </button>
       <button class="mode" data-mode="study">
-        <div class="mode-title">Study &middot; full breakdown</div>
-        <div class="mode-sub">
-          Every question in the full pool, untimed.<br>
-          Pick an answer to reveal the <b>triage quadrant,
-          technique, formula &amp; full solution</b>.
-        </div>
+        <div class="mode-title">Study</div>
+        <div class="mode-sub">Full breakdown, untimed.</div>
+      </button>
+      <button class="mode" data-mode="extended">
+        <div class="mode-title">Extended</div>
+        <div class="mode-sub">15 from the full pool, timed.</div>
       </button>
     </div>
 
@@ -619,6 +616,7 @@
 
 <script src="questions.js"></script>
 <script src="questions-extra.js"></script>
+<script src="questions-difficulty.js"></script>
 <script src="classifications.js"></script>
 <script>
 (function () {
@@ -667,15 +665,24 @@
   // The extended pool is Optiver-only: the IMC questions come from a different
   // quiz format (shorter clock, easier) so they are left out of the practice set.
   var OPTIVER  = QUESTIONS.filter(function (q) { return q.source === "Optiver"; });
-  var EXTENDED = OPTIVER.concat(QUESTIONS_EXTRA);
-  var ALL_POOL = QUESTIONS.concat(QUESTIONS_EXTRA);
+  var PHOTO_POOL = QUESTIONS.filter(function (q) { return q.origin === "photo" || q.origin === "recalled"; });
+  var EASY_GEN   = QUESTIONS_EXTRA;
+  var MEDIUM_GEN = QUESTIONS_DIFFICULTY.filter(function (q) { return q.difficulty === "medium"; });
+  var HARD_GEN   = QUESTIONS_DIFFICULTY.filter(function (q) { return q.difficulty === "hard"; });
+  var EASY_POOL   = EASY_GEN.concat(PHOTO_POOL);
+  var MEDIUM_POOL = MEDIUM_GEN.concat(PHOTO_POOL);
+  var HARD_POOL   = HARD_GEN.concat(PHOTO_POOL);
+  var ALL_GENERATED = QUESTIONS_EXTRA.concat(QUESTIONS_DIFFICULTY);
+  var EXTENDED = OPTIVER.concat(ALL_GENERATED);
+  var ALL_POOL = QUESTIONS.concat(ALL_GENERATED);
 
   (function fillDbLine() {
     el("dbline").textContent =
       QUESTIONS.length + " real questions — " + OPTIVER.length + " Optiver, " +
       (QUESTIONS.length - OPTIVER.length) + " IMC. " +
-      "Extended pool adds " + QUESTIONS_EXTRA.length +
-      " practice questions for a total of " + EXTENDED.length + ".";
+      EASY_GEN.length + " easy, " + MEDIUM_GEN.length + " medium, " +
+      HARD_GEN.length + " hard generated questions. " +
+      "Total pool: " + ALL_POOL.length + ".";
   })();
 
   Array.prototype.forEach.call(document.querySelectorAll(".mode"), function (b) {
@@ -701,8 +708,17 @@
       studyRender();
       return;
     }
-    state.deck    = shuffle(mode === "extended" ? EXTENDED : QUESTIONS);
-    if (mode !== "all") state.deck = state.deck.slice(0, TIMED_COUNT);
+    var pool;
+    switch (mode) {
+      case "easy":     pool = EASY_POOL;   break;
+      case "medium":   pool = MEDIUM_POOL; break;
+      case "hard":     pool = HARD_POOL;   break;
+      case "photo":    pool = PHOTO_POOL;  break;
+      case "extended": pool = EXTENDED;    break;
+      default:         pool = QUESTIONS;   break;
+    }
+    state.deck = shuffle(pool);
+    if (mode !== "all" && mode !== "photo") state.deck = state.deck.slice(0, TIMED_COUNT);
     state.index   = 0;
     state.answers = [];
     show("quiz");
@@ -752,7 +768,7 @@
     clearInterval(state.timer);
     var t = el("timer");
 
-    if (state.mode === "all") {          // the untimed mode is the only clockless one
+    if (state.mode === "all" || state.mode === "photo") {
       t.textContent = "";
       t.classList.remove("low");
       return;
@@ -793,7 +809,7 @@
       correct: correct
     });
 
-    if (state.mode === "extended") {
+    {
       quizBreakdownShown = true;
       el("submit").style.display = "none";
 
@@ -879,7 +895,11 @@
     var label = {
       timed:    "timed run, 15 shuffled questions from the real set",
       all:      "full database, untimed",
-      extended: "timed run, 15 shuffled questions from the extended pool"
+      photo:    "photo/recall questions only, untimed",
+      easy:     "easy difficulty, timed",
+      medium:   "medium difficulty, timed",
+      hard:     "hard difficulty, timed",
+      extended: "timed run, 15 shuffled from the full extended pool"
     }[state.mode];
     el("scoreSub").textContent =
       Math.round((right / total) * 100) + "% correct — " + label;

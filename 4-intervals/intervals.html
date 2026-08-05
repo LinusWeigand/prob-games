@@ -138,6 +138,78 @@
     border-radius:4px;
   }
 
+  /* data tables */
+  .data-table{
+    border-collapse:collapse;
+    font-size:13px;
+    margin:0 auto;
+  }
+  .data-table th{
+    background:var(--cell);
+    font-weight:600;
+    padding:8px 14px;
+    border:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .data-table td{
+    padding:6px 14px;
+    border:1px solid var(--line);
+    text-align:center;
+    white-space:nowrap;
+  }
+  .data-table tr:nth-child(even) td{ background:#fafafa; }
+  .data-table td.q-mark{
+    font-weight:700;
+    color:var(--magenta);
+  }
+
+  /* number grids */
+  .number-grid{
+    border-collapse:collapse;
+    margin:0 auto;
+  }
+  .number-grid td{
+    min-width:44px;
+    height:38px;
+    text-align:center;
+    font-size:15px;
+    font-weight:600;
+    border:1px solid var(--line);
+    padding:4px 10px;
+    color:var(--ink);
+  }
+  .number-grid tr:nth-child(even) td{ background:var(--cell); }
+
+  /* dice grids */
+  .dice-grid-wrap{
+    display:flex;
+    justify-content:center;
+  }
+  .dice-grid{
+    display:inline-grid;
+    gap:3px;
+    background:var(--line);
+    padding:3px;
+    border-radius:4px;
+  }
+  .die{
+    width:34px;
+    height:34px;
+    background:#fff;
+    border-radius:3px;
+    display:grid;
+    grid-template:repeat(3,1fr)/repeat(3,1fr);
+    padding:4px;
+  }
+  .die .dot{
+    width:5px;
+    height:5px;
+    background:var(--ink);
+    border-radius:50%;
+    align-self:center;
+    justify-self:center;
+  }
+
   /* interval area */
   .interval-area{
     padding:10px 7vw 0;
@@ -351,6 +423,12 @@
     h1{ font-size:32px; }
     .interval-area{ gap:20px; }
     .bound-input{ width:64px; font-size:16px; }
+    .data-table{ font-size:11px; }
+    .data-table th, .data-table td{ padding:4px 8px; }
+    .number-grid td{ min-width:36px; font-size:13px; padding:3px 6px; }
+    .die{ width:28px; height:28px; padding:3px; }
+    .die .dot{ width:4px; height:4px; }
+    .dice-grid{ gap:2px; padding:2px; }
   }
 </style>
 </head>
@@ -465,6 +543,7 @@
 </section>
 
 <script src="questions.js"></script>
+<script src="questions-extra.js"></script>
 <script>
 (function () {
   "use strict";
@@ -564,7 +643,92 @@
       img.src = "data/cropped/" + q.imageSrc;
       img.alt = "Question visual";
       area.appendChild(img);
+    } else if (q.visualType === "table" && q.visualData) {
+      area.appendChild(buildTable(q.visualData));
+    } else if (q.visualType === "number-grid" && q.gridData) {
+      area.appendChild(buildNumberGrid(q.gridData));
+    } else if (q.visualType === "dice-grid" && q.diceData) {
+      area.appendChild(buildDiceGrid(q.diceData));
     }
+  }
+
+  function buildTable(d) {
+    var t = document.createElement("table");
+    t.className = "data-table";
+    var thead = document.createElement("thead");
+    var hr = document.createElement("tr");
+    d.headers.forEach(function (h) {
+      var th = document.createElement("th");
+      th.textContent = h;
+      hr.appendChild(th);
+    });
+    thead.appendChild(hr);
+    t.appendChild(thead);
+    var tbody = document.createElement("tbody");
+    d.rows.forEach(function (row) {
+      var tr = document.createElement("tr");
+      row.forEach(function (cell) {
+        var td = document.createElement("td");
+        td.textContent = cell;
+        if (cell === "?") {
+          td.className = "q-mark";
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody);
+    return t;
+  }
+
+  function buildNumberGrid(data) {
+    var t = document.createElement("table");
+    t.className = "number-grid";
+    var tbody = document.createElement("tbody");
+    data.forEach(function (row) {
+      var tr = document.createElement("tr");
+      row.forEach(function (n) {
+        var td = document.createElement("td");
+        td.textContent = n;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody);
+    return t;
+  }
+
+  var DICE_DOTS = {
+    1: [[2,2]],
+    2: [[1,3],[3,1]],
+    3: [[1,3],[2,2],[3,1]],
+    4: [[1,1],[1,3],[3,1],[3,3]],
+    5: [[1,1],[1,3],[2,2],[3,1],[3,3]],
+    6: [[1,1],[2,1],[3,1],[1,3],[2,3],[3,3]]
+  };
+
+  function buildDiceGrid(data) {
+    var wrap = document.createElement("div");
+    wrap.className = "dice-grid-wrap";
+    var grid = document.createElement("div");
+    grid.className = "dice-grid";
+    grid.style.gridTemplateColumns = "repeat(" + data[0].length + ", 34px)";
+    data.forEach(function (row) {
+      row.forEach(function (val) {
+        var die = document.createElement("div");
+        die.className = "die";
+        (DICE_DOTS[val] || []).forEach(function (pos) {
+          var dot = document.createElement("span");
+          dot.className = "dot";
+          dot.style.gridRow = pos[0];
+          dot.style.gridColumn = pos[1];
+          die.appendChild(dot);
+        });
+        grid.appendChild(die);
+      });
+    });
+    wrap.appendChild(grid);
+    return wrap;
   }
 
   // ----------------------------------------------------------- bound buttons
