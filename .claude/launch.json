@@ -6,6 +6,12 @@
       "runtimeExecutable": "/opt/homebrew/bin/python3.12",
       "runtimeArgs": ["-m", "http.server", "8091", "-d", "3-likelihood-list"],
       "port": 8091
+    },
+    {
+      "name": "beat-the-odds",
+      "runtimeExecutable": "/opt/homebrew/bin/python3.12",
+      "runtimeArgs": ["-m", "http.server", "8321", "-d", "1-beat-the-odds"],
+      "port": 8321
     }
   ]
 }
