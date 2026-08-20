@@ -961,9 +961,9 @@ const QUESTIONS_EXTRA = [
       "Two cards are drawn from a deck of 52 in which A = 1, 2 = 2, ..., K = 13. What is " +
       "the probability that the second card has a strictly higher value than the first?",
     options: ["0.3", "0.4", "0.47", "0.5", "0.6"],
-    answer: 2,
+    answer: 1,
     note:
-      "P(tie) = 3/51, and the rest splits evenly: 0.471"
+      "P(tie) = 13 × (4/52 × 3/51) = 4/17. By symmetry P(2nd > 1st) = (1 − 4/17)/2 = 13/34 ≈ 0.382"
   },
 
   {

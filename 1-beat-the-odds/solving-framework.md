@@ -294,7 +294,32 @@ time. Set up states by "how much of the pattern do I currently have".
 - Until two consecutive rolls sum to 7 → after the first roll, exactly one of six faces
   completes it, so `1 + 6 = 7` `[x091]`
 
-### D5 · Wald — expected value of a stopped sum
+### D5 · First collision — "first duplicate among n types"
+
+> Trigger: *first duplicate, first match, first repeated, first collision*
+
+Not the same as coupon collector (which waits for *all*). Here you wait for *any* repeat.
+
+```
+E[first duplicate] = Σ_{k=0}^{n-1}  (n)_k / n^k
+
+Small n: enumerate P(first dup at draw k) and weight by k
+Large n: ≈ √(πn/2)          (birthday approximation)
+```
+
+**Small-n method (enumerate).** For n types, the process ends by draw n+1 at latest.
+Compute P(all distinct through k draws) = n·(n−1)·…·(n−k+1) / nᵏ, then
+P(first dup at draw k) = P(all distinct through k−1) × (k−1)/n.
+
+- 4 coupon types → P(dup at 2) = 1/4, P(at 3) = 3/8, P(at 4) = 9/32, P(at 5) = 3/32
+  → E = (2+9/8+36/32+15/32) = 103/32 = 3.22 `[x236]`
+- 6 types (dice) → √(6π/2) ≈ 3.07, exact = 3.77 — for small n, enumerate `[x237]`
+- 365 types (birthdays) → √(365π/2) ≈ 24.0
+
+**The birthday approximation** √(πn/2) is accurate for large n but rough for small n.
+When n ≤ 10, just enumerate — it is five lines of arithmetic.
+
+### D6 · Wald — expected value of a stopped sum
 
 ```
 E[X₁ + … + X_N] = E[N] · E[X]        (N a stopping time, X's iid)
@@ -307,7 +332,7 @@ This turns a hard "sum until" question into two easy ones.
 - The six-running-sums question `[opt-p03]`: the 6s bucket ends it after 17 sixes, so
   `E[rolls] = 17 × 6 = 102` and `E[sum] = 102 × 3.5 ≈ 357`. Estimate, then pick closest.
 
-### D6 · Hitting times on graphs
+### D7 · Hitting times on graphs
 
 ```
 n-cycle, vertices d apart:      E = d(n − d)
@@ -332,7 +357,7 @@ This underestimates slightly because of overshoot — the walk crosses d, not la
 - Steps ±1/±2/±3 equally likely, "at least 10 away" → `E[X²] = 28/6 = 4.67`,
   `T ≈ 100/4.67 = 21.4`, overshoot pushes to ~24 `[opt-r08]`
 
-### D7 · Return times — the slickest formula in the set
+### D8 · Return times — the slickest formula in the set
 
 For a random walk on a graph, the expected time to return to vertex `v` is `1/π_v`:
 
@@ -484,6 +509,7 @@ The lookup below is the thing to memorise. Everything else follows from it.
 | until the first … | `1/p` |
 | until the r-th … | `r/p` |
 | until all … have appeared | coupon collector, `n·H_n` |
+| first duplicate / first collision | enumerate or `√(πn/2)` |
 | until pattern (HH, HT, sum 7) | state recursion — do **not** guess |
 | until one of you is broke | gambler's ruin |
 | first to … (alternating) | competing geometrics |

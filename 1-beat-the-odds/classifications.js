@@ -334,7 +334,7 @@ var CLASSIFY = {
   "x301":   { q: "B", t: "Gambler's ruin (biased)",               f: "P = (1 − rⁱ) / (1 − rᴺ),  r = q/p" },
   "x302":   { q: "B", t: "Renewal recurrence",                    f: "pₙ = (1/2)pₙ₋₁ + (1/2)pₙ₋₂ → 2/3" },
   "x303":   { q: "D", t: "Hitting time (drift shortcut)",         f: "E = distance / drift = 1 / E[step]" },
-  "x304":   { q: "D", t: "Hitting time (lazy walk)",              f: "E = 2k²  (lazy symmetric walk)" },
+  "x304":   { q: "D", t: "Hitting time (biased lazy walk)",        f: "E_k = 4k  (biased lazy walk, drift -1/4)" },
   "x305":   { q: "B", t: "First-step (cube / Hamming)",           f: "Track Hamming distance, multiply transition probs" },
 
   // Complex Conditional Probability

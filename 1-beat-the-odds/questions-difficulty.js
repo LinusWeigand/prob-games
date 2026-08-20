@@ -676,24 +676,20 @@ const QUESTIONS_DIFFICULTY = [
   {
     id: "x304", source: "Optiver", origin: "generated", difficulty: "hard",
     text:
-      "A particle starts at position 2 on the integer number line. Each second, " +
-      "it moves +1 with probability 1/4, stays with probability 1/2, or moves " +
-      "-1 with probability 1/4. What is the expected number of steps to reach 0?",
+      "A particle starts at position 2 on the non-negative integer line. Each " +
+      "second, it moves -1 with probability 1/2, stays with probability 1/4, " +
+      "or moves +1 with probability 1/4. What is the expected number of steps " +
+      "to reach 0?",
     options: ["4", "6", "8", "10", "16"],
     answer: 2,
     note:
-      "Lazy walk: effective steps at rate 1/2. On the underlying non-lazy walk, " +
-      "E[reach 0 from 2] = 2^2 = 4 steps. With laziness: 4 / (1/2) = 8. " +
-      "But more precisely: E_k = 1 + (1/4)E_{k-1} + (1/2)E_k + (1/4)E_{k+1} " +
-      "gives (1/2)E_k = 1 + (1/4)E_{k-1} + (1/4)E_{k+1}, so E_k = 2 + " +
-      "(1/2)(E_{k-1}+E_{k+1}). With E_0=0 and noting E_k-E_{k-1} is constant " +
-      "implies -2 step: E_1=c, E_2=2c. From E_1 = 2 + (1/2)(0 + E_2) = " +
-      "2 + c, so c = 2 + c which fails. Using drift: from quadratic formula " +
-      "E_k = -2k^2 + Ck. E_0=0 OK. Need E_N=0 for absorbing at N... " +
-      "Actually with one absorbing barrier at 0: E_k = 2k(k+1)... " +
-      "E_2 = 2(2)(... hmm. Let me just solve: " +
-      "E_1 = 2 + E_2/2, E_2 = 2 + E_1/2 + E_3/2. Without upper barrier " +
-      "and recurrence: E_k = 2k^2. E_2 = 8"
+      "Biased lazy walk: p(-1)=1/2, p(0)=1/4, p(+1)=1/4, drift = -1/4 per step. " +
+      "Recurrence: E_k = 1 + (1/2)E_{k-1} + (1/4)E_k + (1/4)E_{k+1} with E_0=0. " +
+      "Rearranging: E_{k+1} - 3E_k + 2E_{k-1} = -4. " +
+      "Characteristic roots: r=1, r=2. " +
+      "General solution: E_k = A + B*2^k + 4k. " +
+      "E_0=0 gives A = -B. Finiteness as k->inf requires B=0, so E_k = 4k. " +
+      "E_2 = 8."
   },
 
   {
