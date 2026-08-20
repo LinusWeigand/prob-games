@@ -447,17 +447,9 @@
     </p>
 
     <div class="modes">
-      <button class="mode" data-mode="timed">
-        <div class="mode-title">Timed</div>
-        <div class="mode-sub">15 real questions, 2:00 each.</div>
-      </button>
-      <button class="mode" data-mode="all">
-        <div class="mode-title">Full DB</div>
-        <div class="mode-sub">All real questions, untimed.</div>
-      </button>
       <button class="mode" data-mode="photo">
-        <div class="mode-title">Photo Only</div>
-        <div class="mode-sub">Photo/recall questions, untimed.</div>
+        <div class="mode-title">Optiver + IMC</div>
+        <div class="mode-sub">Real questions from both assessments, untimed.</div>
       </button>
       <button class="mode" data-mode="easy">
         <div class="mode-title">Easy</div>
@@ -471,17 +463,9 @@
         <div class="mode-title">Hard</div>
         <div class="mode-sub">50 hardest + photos, timed.</div>
       </button>
-      <button class="mode" data-mode="classify">
-        <div class="mode-title">Classify</div>
-        <div class="mode-sub">Flashcards: quadrant, technique &amp; formula.</div>
-      </button>
-      <button class="mode" data-mode="study">
-        <div class="mode-title">Study</div>
-        <div class="mode-sub">Full breakdown, untimed.</div>
-      </button>
       <button class="mode" data-mode="extended">
-        <div class="mode-title">Extended</div>
-        <div class="mode-sub">15 from the full pool, timed.</div>
+        <div class="mode-title">All Timed</div>
+        <div class="mode-sub">15 shuffled from the full pool, timed.</div>
       </button>
       <button class="mode" data-mode="anki">
         <div class="mode-title">Anki</div>
@@ -833,23 +817,6 @@
 
   function begin(mode) {
     state.mode    = mode;
-    if (mode === "classify") {
-      state.deck  = shuffle(ALL_POOL);
-      state.deck  = state.deck.slice(0, TIMED_COUNT);
-      state.index = 0;
-      state.answers = [];
-      show("flashcard");
-      fcRender();
-      return;
-    }
-    if (mode === "study") {
-      state.deck  = shuffle(ALL_POOL);
-      state.index = 0;
-      state.answers = [];
-      show("study");
-      studyRender();
-      return;
-    }
     if (mode === "anki") {
       state.deck = ankiBuildDeck(ALL_POOL);
       if (state.deck.length === 0) {
@@ -872,7 +839,7 @@
       default:         pool = QUESTIONS;   break;
     }
     state.deck = shuffle(pool);
-    if (mode !== "all" && mode !== "photo") state.deck = state.deck.slice(0, TIMED_COUNT);
+    if (mode !== "photo") state.deck = state.deck.slice(0, TIMED_COUNT);
     state.index   = 0;
     state.answers = [];
     show("quiz");
@@ -922,7 +889,7 @@
     clearInterval(state.timer);
     var t = el("timer");
 
-    if (state.mode === "all" || state.mode === "photo") {
+    if (state.mode === "photo") {
       t.textContent = "";
       t.classList.remove("low");
       return;
@@ -1052,13 +1019,11 @@
 
     el("score").textContent = right + " / " + total;
     var label = {
-      timed:    "timed run, 15 shuffled questions from the real set",
-      all:      "full database, untimed",
-      photo:    "photo/recall questions only, untimed",
+      photo:    "Optiver + IMC questions, untimed",
       easy:     "easy difficulty, timed",
       medium:   "medium difficulty, timed",
       hard:     "hard difficulty, timed",
-      extended: "timed run, 15 shuffled from the full extended pool",
+      extended: "timed run, 15 shuffled from the full pool",
       anki:     "spaced repetition, timed"
     }[state.mode];
     el("scoreSub").textContent =
