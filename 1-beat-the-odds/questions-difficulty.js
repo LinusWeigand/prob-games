@@ -730,15 +730,12 @@ const QUESTIONS_DIFFICULTY = [
       "random and roll it 3 times, getting 6, 6, 4. What is the probability " +
       "you picked the loaded die?",
     options: ["0.15", "0.3", "0.45", "0.65", "0.85"],
-    answer: 3,
+    answer: 4,
     note:
-      "P(664|fair) = (1/6)^3 = 1/216. P(664|loaded) = (1/2)(1/2)(1/10) = 1/40. " +
-      "P(loaded|664) = (1/40) / (1/40 + 1/216) = 216/(216+40) = 216/256 = 27/32 " +
-      "Hmm that's 0.844 -- but (1/2)(1/40)/[(1/2)(1/40)+(1/2)(1/216)] = " +
-      "(1/40)/(1/40+1/216) = 5.4/(5.4+1) = ... " +
-      "1/40 = 0.025, 1/216 = 0.00463. Ratio = 0.025/(0.025+0.00463) = 0.844. " +
-      "Hmm that maps to option 4 (0.85). Let me adjust the problem. " +
-      "Actually with prior 1/2 each: P = 0.025/(0.025+0.00463) = 0.844"
+      "Bayes with equal priors: P(loaded|664) = L_loaded / (L_loaded + L_fair). " +
+      "L_fair = (1/6)^3 = 1/216. L_loaded = (1/2)(1/2)(1/10) = 1/40. " +
+      "Common denominator 1080: 1/40 = 27/1080, 1/216 = 5/1080. " +
+      "P(loaded|664) = 27 / (27 + 5) = 27/32 ≈ 0.844. Closest option: 0.85."
   },
 
   {
@@ -962,10 +959,12 @@ const QUESTIONS_DIFFICULTY = [
       "A fair die is rolled n times. For large n, the probability that the " +
       "running sum hits exactly the value n at some point approaches a limit. " +
       "What is this limit?",
-    options: ["1/6", "1/3.5", "2/7", "1/3", "1/2"],
+    options: ["1/6", "1/4", "2/7", "1/3", "1/2"],
     answer: 2,
     note:
-      "By renewal theory, P(sum = k) -> 1/E[X] = 1/3.5 = 2/7 = 0.286"
+      "By renewal theory (elementary renewal theorem for lattice-valued " +
+      "increments), P(running sum ever equals k) -> 1/E[X] as k -> infinity. " +
+      "For a fair die, E[X] = 3.5, so the limit is 1/3.5 = 2/7 ≈ 0.286."
   },
 
   {
